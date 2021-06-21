@@ -245,7 +245,7 @@ class SecureCodingStandardChecker(BaseChecker):
         self.add_message('avoid-assert', node=node)
 
 
-def register(linter):
+def register(linter):  # pragma: no cover
     """
     Function to register the plugin to Pylint
     """
