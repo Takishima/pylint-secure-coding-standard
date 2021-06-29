@@ -49,6 +49,31 @@ def _is_os_path_call(node):
     )
 
 
+def _is_builtin_open_for_writing(node):
+    if isinstance(node.func, astroid.Name) and node.func.name == 'open':
+        mode = ''
+        if len(node.args) > 1:
+            if isinstance(node.args[1], astroid.Name):
+                return True  # variable -> to be on the safe side, flag as inappropriate
+            if isinstance(node.args[1], astroid.Const):
+                mode = node.args[1].value
+        elif node.keywords:
+            for keyword in node.keywords:
+                if keyword.arg == 'mode':
+                    if not isinstance(keyword.value, astroid.Const):
+                        return True  # variable -> to be on the safe side, flag as inappropriate
+                    mode = keyword.value.value
+                    break
+
+        if any(m in mode for m in 'awx'):
+            # open(..., "w")
+            # open(..., "wb")
+            # open(..., "a")
+            # open(..., "x")
+            return True
+    return False
+
+
 def _is_subprocess_shell_true_call(node):
     if (
         isinstance(node.func, astroid.Attribute)
@@ -190,6 +215,12 @@ class SecureCodingStandardChecker(BaseChecker):
             'avoid-assert',
             '`assert` statements should not be present in production code',
         ),
+        'R8005': (
+            'Avoid builtin open() when writing to files, prefer os.open()',
+            'replace-builtin-open',
+            'Use of builtin `open` for writing is discouraged in favor of `os.open` to allow for setting file '
+            'permissions',
+        ),
     }
 
     options = {}
@@ -212,6 +243,8 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('replace-os-relpath-abspath', node=node)
         elif _is_subprocess_shell_true_call(node):
             self.add_message('avoid-shell-true', node=node)
+        elif _is_builtin_open_for_writing(node):
+            self.add_message('replace-builtin-open', node=node)
         elif isinstance(node.func, astroid.Name) and (node.func.name in ('eval', 'exec')):
             self.add_message('avoid-eval-exec', node=node)
 
@@ -237,6 +270,14 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('replace-os-relpath-abspath', node=node)
         elif node.modname == 'os' and [name for (name, _) in node.names if name == 'system']:
             self.add_message('avoid-os-system', node=node)
+
+    def visit_with(self, node):
+        """
+        Visitor method called for astroid.With nodes
+        """
+        for item in node.items:
+            if item and isinstance(item[0], astroid.Call) and _is_builtin_open_for_writing(item[0]):
+                self.add_message('replace-builtin-open', node=node)
 
     def visit_assert(self, node):
         """

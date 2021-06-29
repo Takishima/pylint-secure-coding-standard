@@ -11,17 +11,18 @@ pylint plugin that enforces some secure coding standards.
 
 ## Pylint codes
 
-| Code  | Description                                                                     |
-|-------|---------------------------------------------------------------------------------|
-| R8000 | Use `os.path.realpath()` instead of `os.path.abspath()` and `os.path.relpath()` |
-| E8001 | Avoid using `exec()` and `eval()`                                               |
-| E8002 | Avoid using `os.sytem()`                                                        |
-| E8003 | Avoid using `shell=True` when calling `subprocess` functions                    |
-| R8004 | Avoid using `tempfile.mktemp()`, prefer `tempfile.mkstemp()` instead            |
-| E8005 | Avoid using unsafe PyYAML loading functions                                     |
-| E8006 | Avoid using `jsonpickle.decode()`                                               |
-| C8007 | Avoid debug statement in production code                                        |
-| C8008 | Avoid `assert` statements in production code                                    |
+| Code  | Description                                                                                                  |
+|-------|--------------------------------------------------------------------------------------------------------------|
+| R8000 | Use `os.path.realpath()` instead of `os.path.abspath()` and `os.path.relpath()`                              |
+| E8001 | Avoid using `exec()` and `eval()`                                                                            |
+| E8002 | Avoid using `os.sytem()`                                                                                     |
+| E8003 | Avoid using `shell=True` when calling `subprocess` functions                                                 |
+| R8004 | Avoid using `tempfile.mktemp()`, prefer `tempfile.mkstemp()` instead                                         |
+| E8005 | Avoid using unsafe PyYAML loading functions                                                                  |
+| E8006 | Avoid using `jsonpickle.decode()`                                                                            |
+| C8007 | Avoid debug statement in production code                                                                     |
+| C8008 | Avoid `assert` statements in production code                                                                 |
+| R8009 | Use of builtin `open` for writing is discouraged in favor of `os.open` to allow for setting file permissions |
 
 
 ## Pre-commit hook
@@ -31,7 +32,7 @@ See [pre-commit](https://github.com/pre-commit/pre-commit) for instructions
 Sample `.pre-commit-config.yaml`:
 
 ```yaml
-  - repo: https://github.com/pycqa/pylint
+  - repo: https://github.com/PyCQA/pylint/
     rev: pylint-2.6.0
     hooks:
     -   id: pylint
