@@ -233,7 +233,7 @@ class SecureCodingStandardChecker(BaseChecker):
         'E8010': (
             'Avoid using `os.popen()`',
             'avoid-os-popen',
-            'Use of `os.popen()` should be avoided, as it internally uses `subprocess.Popen` with `shell=True`'
+            'Use of `os.popen()` should be avoided, as it internally uses `subprocess.Popen` with `shell=True`',
         ),
     }
 
