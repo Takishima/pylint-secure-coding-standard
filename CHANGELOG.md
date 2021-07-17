@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+-   Added E8010 to avoid using `os.popen()` as it internally uses `subprocess.Popen` with `shell=True`
+
 ## [1.1.0] - 2021-07-02
 
 ### Added
