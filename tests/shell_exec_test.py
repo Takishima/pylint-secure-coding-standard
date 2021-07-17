@@ -72,6 +72,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             ('sp.check_call(["cat", "/etc/passwd"], shell=True)', 'avoid-shell-true'),
             ('subprocess.check_output(["cat", "/etc/passwd"], shell=True)', 'avoid-shell-true'),
             ('sp.check_output(["cat", "/etc/passwd"], shell=True)', 'avoid-shell-true'),
+            ('os.popen("cat", mode="w")', 'avoid-os-popen'),
         ),
     )
     def test_shell_true_call(self, s, msg_id):
