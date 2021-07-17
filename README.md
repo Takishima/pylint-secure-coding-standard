@@ -23,6 +23,7 @@ pylint plugin that enforces some secure coding standards.
 | C8007 | Avoid debug statement in production code                                                                     |
 | C8008 | Avoid `assert` statements in production code                                                                 |
 | R8009 | Use of builtin `open` for writing is discouraged in favor of `os.open` to allow for setting file permissions |
+| E8010 | Avoid using `os.popen()` as it internally uses `subprocess.Popen` with `shell=True`                          |
 
 
 ## Pre-commit hook
