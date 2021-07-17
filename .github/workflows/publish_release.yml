@@ -12,9 +12,9 @@ on:
 
 jobs:
   release:
-    name: Build wheels
+    name: Build wheels and release on Pypi
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'pull_request' && github.event.pull_request.merged == true)
+    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'pull_request' && github.event.pull_request.merged == true && (startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'hotfix/')))
 
     steps:
       - uses: actions/checkout@v2
