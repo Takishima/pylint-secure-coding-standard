@@ -17,13 +17,13 @@ pylint plugin that enforces some secure coding standards.
 | E8001 | Avoid using `exec()` and `eval()`                                                                            |
 | E8002 | Avoid using `os.sytem()`                                                                                     |
 | E8003 | Avoid using `shell=True` when calling `subprocess` functions                                                 |
-| E8004 | Avoid using `os.popen()` as it internally uses `subprocess.Popen` with `shell=True`                          |
 | R8004 | Avoid using `tempfile.mktemp()`, prefer `tempfile.mkstemp()` instead                                         |
 | E8005 | Avoid using unsafe PyYAML loading functions                                                                  |
 | E8006 | Avoid using `jsonpickle.decode()`                                                                            |
 | C8007 | Avoid debug statement in production code                                                                     |
 | C8008 | Avoid `assert` statements in production code                                                                 |
 | R8009 | Use of builtin `open` for writing is discouraged in favor of `os.open` to allow for setting file permissions |
+| E8010 | Avoid using `os.popen()` as it internally uses `subprocess.Popen` with `shell=True`                          |
 
 
 ## Pre-commit hook

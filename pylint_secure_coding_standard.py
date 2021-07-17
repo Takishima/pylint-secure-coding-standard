@@ -199,11 +199,6 @@ class SecureCodingStandardChecker(BaseChecker):
             'avoid-shell-true',
             'Use of `shell=True` in subprocess functions should be avoided',
         ),
-        'E8004': (
-            'Avoid using `os.popen()`',
-            'avoid-os-popen',
-            'Use of `os.popen()` should be avoided, as it internally uses `subprocess.Popen` with `shell=True`'
-        ),
         'R8004': (
             'Avoid using `tempfile.mktemp()`, prefer `tempfile.mkstemp()` instead',
             'replace-mktemp',
@@ -234,6 +229,11 @@ class SecureCodingStandardChecker(BaseChecker):
             'replace-builtin-open',
             'Use of builtin `open` for writing is discouraged in favor of `os.open` to allow for setting file '
             'permissions',
+        ),
+        'E8010': (
+            'Avoid using `os.popen()`',
+            'avoid-os-popen',
+            'Use of `os.popen()` should be avoided, as it internally uses `subprocess.Popen` with `shell=True`'
         ),
     }
 
