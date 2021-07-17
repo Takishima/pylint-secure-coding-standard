@@ -51,6 +51,8 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         (
             ('from os import system', 'avoid-os-system'),
             ('from os import system as os_system', 'avoid-os-system'),
+            ('from os import popen', 'avoid-os-popen'),
+            ('from os import popen as os_popen', 'avoid-os-popen'),
         ),
     )
     def test_shell_true_importfrom(self, s, msg_id):
