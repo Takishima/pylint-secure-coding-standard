@@ -256,6 +256,7 @@ class SecureCodingStandardChecker(BaseChecker):
             'Avoid using `os.popen()`',
             'avoid-os-popen',
             'Use of `os.popen()` should be avoided, as it internally uses `subprocess.Popen` with `shell=True`',
+        ),
         'E8011': (
             'Avoid using `shlex.quote()` on non-POSIX platforms',
             'avoid-shlex-quote-on-non-posix',
