@@ -15,10 +15,23 @@
 
 """Main file for the pylint_secure_coding_standard plugin"""
 
+import platform
+
 import astroid
 
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
+
+
+# ==============================================================================
+# Helper functions
+
+
+def _is_posix():
+    """Return True if the current system is POSIX-compatible."""
+    # NB: we could simply use `os.name` instead of `platform.system()`. However, that solution would be difficult to
+    #     test using `mock` as a few modules (like `pytest`) actually use it internally...
+    return platform.system() in ('Linux', 'Darwin')
 
 
 # ==============================================================================
@@ -171,6 +184,15 @@ def _is_jsonpickle_encode_call(node):
     return False
 
 
+def _is_shlex_quote_call(node):
+    return not _is_posix() and (
+        isinstance(node.func, astroid.Attribute)
+        and isinstance(node.func.expr, astroid.Name)
+        and node.func.expr.name == 'shlex'
+        and node.func.attrname == 'quote'
+    )
+
+
 # ==============================================================================
 
 
@@ -235,6 +257,11 @@ class SecureCodingStandardChecker(BaseChecker):
             'avoid-os-popen',
             'Use of `os.popen()` should be avoided, as it internally uses `subprocess.Popen` with `shell=True`',
         ),
+        'E8011': (
+            'Avoid using `shlex.quote()` on non-POSIX platforms',
+            'avoid-shlex-quote-on-non-posix',
+            'Use of `shlex.quote()` should be avoided on non-POSIX platforms (such as Windows)',
+        ),
     }
 
     options = {}
@@ -263,6 +290,8 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('replace-builtin-open', node=node)
         elif isinstance(node.func, astroid.Name) and (node.func.name in ('eval', 'exec')):
             self.add_message('avoid-eval-exec', node=node)
+        elif _is_shlex_quote_call(node):
+            self.add_message('avoid-shlex-quote-on-non-posix', node=node)
 
     def visit_import(self, node):
         """
@@ -288,6 +317,8 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('avoid-os-system', node=node)
         elif node.modname == 'os' and [name for (name, _) in node.names if name == 'popen']:
             self.add_message('avoid-os-popen', node=node)
+        elif not _is_posix() and node.modname == 'shlex' and [name for (name, _) in node.names if name == 'quote']:
+            self.add_message('avoid-shlex-quote-on-non-posix', node=node)
 
     def visit_with(self, node):
         """

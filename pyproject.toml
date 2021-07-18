@@ -66,6 +66,7 @@ build-backend = "setuptools.build_meta"
 minversion = '6.0'
 addopts = '-pno:warnings'
 testpaths = ['tests']
+mock_traceback_monkeypatch = false
 
 [tool.setuptools_scm]
 write_to = 'VERSION.txt'
