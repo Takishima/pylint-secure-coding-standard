@@ -46,6 +46,15 @@ def _is_os_system_call(node):
     )
 
 
+def _is_os_popen_call(node):
+    return (
+        isinstance(node.func, astroid.Attribute)
+        and isinstance(node.func.expr, astroid.Name)
+        and node.func.expr.name == 'os'
+        and node.func.attrname == 'popen'
+    )
+
+
 def _is_os_path_call(node):
     return (
         isinstance(node.func, astroid.Attribute)
@@ -243,6 +252,10 @@ class SecureCodingStandardChecker(BaseChecker):
             'Use of builtin `open` for writing is discouraged in favor of `os.open` to allow for setting file '
             'permissions',
         ),
+        'E8010': (
+            'Avoid using `os.popen()`',
+            'avoid-os-popen',
+            'Use of `os.popen()` should be avoided, as it internally uses `subprocess.Popen` with `shell=True`',
         'E8011': (
             'Avoid using `shlex.quote()` on non-POSIX platforms',
             'avoid-shlex-quote-on-non-posix',
@@ -270,6 +283,8 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('replace-os-relpath-abspath', node=node)
         elif _is_subprocess_shell_true_call(node):
             self.add_message('avoid-shell-true', node=node)
+        elif _is_os_popen_call(node):
+            self.add_message('avoid-os-popen', node=node)
         elif _is_builtin_open_for_writing(node):
             self.add_message('replace-builtin-open', node=node)
         elif isinstance(node.func, astroid.Name) and (node.func.name in ('eval', 'exec')):
@@ -299,6 +314,8 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('replace-os-relpath-abspath', node=node)
         elif node.modname == 'os' and [name for (name, _) in node.names if name == 'system']:
             self.add_message('avoid-os-system', node=node)
+        elif node.modname == 'os' and [name for (name, _) in node.names if name == 'popen']:
+            self.add_message('avoid-os-popen', node=node)
         elif not _is_posix() and node.modname == 'shlex' and [name for (name, _) in node.names if name == 'quote']:
             self.add_message('avoid-shlex-quote-on-non-posix', node=node)
 
