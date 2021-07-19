@@ -212,7 +212,7 @@ def _is_jsonpickle_encode_call(node):
 
 
 def _is_shlex_quote_call(node):
-    return not _is_posix() and (
+    return (
         isinstance(node.func, astroid.Attribute)
         and isinstance(node.func.expr, astroid.Name)
         and node.func.expr.name == 'shlex'
@@ -320,7 +320,7 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('replace-builtin-open', node=node)
         elif isinstance(node.func, astroid.Name) and (node.func.name in ('eval', 'exec')):
             self.add_message('avoid-eval-exec', node=node)
-        elif _is_shlex_quote_call(node):
+        elif not _is_posix() and _is_shlex_quote_call(node):
             self.add_message('avoid-shlex-quote-on-non-posix', node=node)
 
     def visit_import(self, node):
