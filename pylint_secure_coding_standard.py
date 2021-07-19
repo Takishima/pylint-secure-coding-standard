@@ -13,15 +13,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Main file for the pylint_secure_coding_standard plugin"""
+"""Main file for the pylint_secure_coding_standard plugin."""
 
 import platform
 
 import astroid
-
 from pylint.checkers import BaseChecker
 from pylint.interfaces import IAstroidChecker
-
 
 # ==============================================================================
 # Helper functions
@@ -88,10 +86,11 @@ def _is_builtin_open_for_writing(node):
                     break
 
         if any(m in mode for m in 'awx'):
-            # open(..., "w")
-            # open(..., "wb")
-            # open(..., "a")
-            # open(..., "x")
+            # Cover:
+            #  * open(..., "w")
+            #  * open(..., "wb")
+            #  * open(..., "a")
+            #  * open(..., "x")
             return True
     return False
 
@@ -115,11 +114,13 @@ def _is_subprocess_shell_true_call(node):
 def _is_pdb_call(node):
     if isinstance(node.func, astroid.Attribute):
         if isinstance(node.func.expr, astroid.Name) and node.func.expr.name == 'pdb':
-            # pdb.func()
+            # Cover:
+            #  * pdb.func()
             return True
     if isinstance(node.func, astroid.Name):
         if node.func.name == 'Pdb':
-            # Pdb()
+            # Cover:
+            # * Pdb()
             return True
     return False
 
@@ -127,12 +128,14 @@ def _is_pdb_call(node):
 def _is_mktemp_call(node):
     if isinstance(node.func, astroid.Attribute):
         if node.func.attrname == 'mktemp':
-            # tempfile.mktemp()
-            # xxxx.mktemp()
+            # Cover:
+            #  * tempfile.mktemp()
+            #  * xxxx.mktemp()
             return True
     if isinstance(node.func, astroid.Name):
         if node.func.name == 'mktemp':
-            # mktemp()
+            # Cover:
+            #  * mktemp()
             return True
     return False
 
@@ -146,29 +149,38 @@ def _is_yaml_unsafe_call(node):
         and node.func.expr.name == 'yaml'
     ):
         if node.func.attrname in ('unsafe_load', 'full_load'):
-            # yaml.full_load()
-            # yaml.unsafe_load()
+            # Cover:
+            #  * yaml.full_load()
+            #  * yaml.unsafe_load()
             return True
         if node.func.attrname == 'load' and node.keywords:
             for keyword in node.keywords:
                 if keyword.arg == 'Loader' and isinstance(keyword.value, astroid.Name):
                     if keyword.value.name in _unsafe_loaders:
-                        # yaml.load(x, Loader=Loader), yaml.load(x, Loader=UnsafeLoader),
-                        # yaml.load(x, Loader=FullLoader)
+                        # Cover:
+                        #  * yaml.load(x, Loader=Loader)
+                        #  * yaml.load(x, Loader=UnsafeLoader)
+                        #  * yaml.load(x, Loader=FullLoader)
                         return True
                     if keyword.value.name in _safe_loaders:
-                        # yaml.load(x, Loader=BaseLoader), yaml.load(x, Loader=SafeLoader),
+                        # Cover:
+                        #  * yaml.load(x, Loader=BaseLoader)
+                        #  * yaml.load(x, Loader=SafeLoader)
                         return False
         elif node.func.attrname == 'load':
             if len(node.args) < 2 or (isinstance(node.args[1], astroid.Name) and node.args[1].name in _unsafe_loaders):
-                # yaml.load(x)
-                # yaml.load(x, Loader), yaml.load(x, UnsafeLoader), yaml.load(x, FullLoader)
+                # Cover:
+                #  * yaml.load(x)
+                #  * yaml.load(x, Loader)
+                #  * yaml.load(x, UnsafeLoader)
+                #  * yaml.load(x, FullLoader)
                 return True
 
     if isinstance(node.func, astroid.Name):
         if node.func.name in ('unsafe_load', 'full_load'):
-            # unsafe_load()
-            # full_load()
+            # Cover:
+            #  * unsafe_load(...)
+            #  * full_load(...)
             return True
     return False
 
@@ -197,7 +209,7 @@ def _is_shlex_quote_call(node):
 
 
 class SecureCodingStandardChecker(BaseChecker):
-    """Plugin class"""
+    """Plugin class."""
 
     __implements__ = IAstroidChecker
 
@@ -267,9 +279,7 @@ class SecureCodingStandardChecker(BaseChecker):
     options = {}
 
     def visit_call(self, node):
-        """
-        Visitor method called for astroid.Call nodes
-        """
+        """Visitor method called for astroid.Call nodes."""
         if _is_pdb_call(node):
             self.add_message('avoid-debug-stmt', node=node)
         elif _is_mktemp_call(node):
@@ -294,19 +304,16 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('avoid-shlex-quote-on-non-posix', node=node)
 
     def visit_import(self, node):
-        """
-        Visitor method called for astroid.Import nodes
-        """
+        """Visitor method called for astroid.Import nodes."""
         for (name, _) in node.names:
             if name == 'pdb':
-                # import pdb
-                # import pdb as xxx
+                # Cover:
+                #  * import pdb
+                #  * import pdb as xxx
                 self.add_message('avoid-debug-stmt', node=node)
 
     def visit_importfrom(self, node):
-        """
-        Visitor method called for astroid.ImportFrom nodes
-        """
+        """Visitor method called for astroid.ImportFrom nodes."""
         if node.modname == 'pdb':
             self.add_message('avoid-debug-stmt', node=node)
         elif node.modname == 'tempfile' and [name for (name, _) in node.names if name == 'mktemp']:
@@ -321,22 +328,16 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('avoid-shlex-quote-on-non-posix', node=node)
 
     def visit_with(self, node):
-        """
-        Visitor method called for astroid.With nodes
-        """
+        """Visitor method called for astroid.With nodes."""
         for item in node.items:
             if item and isinstance(item[0], astroid.Call) and _is_builtin_open_for_writing(item[0]):
                 self.add_message('replace-builtin-open', node=node)
 
     def visit_assert(self, node):
-        """
-        Visitor method called for astroid.Assert nodes
-        """
+        """Visitor method called for astroid.Assert nodes."""
         self.add_message('avoid-assert', node=node)
 
 
 def register(linter):  # pragma: no cover
-    """
-    Function to register the plugin to Pylint
-    """
+    """Register the plugin to Pylint."""
     linter.register_checker(SecureCodingStandardChecker(linter))

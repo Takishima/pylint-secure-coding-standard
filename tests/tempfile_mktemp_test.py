@@ -14,10 +14,10 @@
 # limitations under the License.
 
 import astroid
+import pylint.testutils
 import pytest
 
 import pylint_secure_coding_standard as pylint_scs
-import pylint.testutils
 
 
 class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
