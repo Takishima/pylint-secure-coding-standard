@@ -16,7 +16,7 @@ pylint plugin that enforces some secure coding standards.
 | R8000 | Use `os.path.realpath()` instead of `os.path.abspath()` and `os.path.relpath()`                              |
 | E8001 | Avoid using `exec()` and `eval()`                                                                            |
 | E8002 | Avoid using `os.sytem()`                                                                                     |
-| E8003 | Avoid using `shell=True` when calling `subprocess` functions                                                 |
+| E8003 | Avoid using `shell=True` in subprocess functions or using functions that internally set this                 |
 | R8004 | Avoid using `tempfile.mktemp()`, prefer `tempfile.mkstemp()` instead                                         |
 | E8005 | Avoid using unsafe PyYAML loading functions                                                                  |
 | E8006 | Avoid using `jsonpickle.decode()`                                                                            |

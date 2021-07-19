@@ -95,19 +95,34 @@ def _is_builtin_open_for_writing(node):
     return False
 
 
-def _is_subprocess_shell_true_call(node):
-    if (
-        isinstance(node.func, astroid.Attribute)
-        and isinstance(node.func.expr, astroid.Name)
-        and node.func.expr.name in ('subprocess', 'sp')
-    ):
-        if node.keywords:
-            for keyword in node.keywords:
-                if keyword.arg == 'shell' and isinstance(keyword.value, astroid.Const) and bool(keyword.value.value):
-                    return True
+def _is_shell_true_call(node):
+    if not (isinstance(node.func, astroid.Attribute) and isinstance(node.func.expr, astroid.Name)):
+        return False
 
-        if len(node.args) > 8 and isinstance(node.args[8], astroid.Const) and bool(node.args[8].value):
+    # subprocess module
+    if node.func.expr.name in ('subprocess', 'sp'):
+        if node.func.attrname in ('call', 'check_call', 'check_output', 'Popen', 'run'):
+            if node.keywords:
+                for keyword in node.keywords:
+                    if (
+                        keyword.arg == 'shell'
+                        and isinstance(keyword.value, astroid.Const)
+                        and bool(keyword.value.value)
+                    ):
+                        return True
+
+            if len(node.args) > 8 and isinstance(node.args[8], astroid.Const) and bool(node.args[8].value):
+                return True
+
+        if node.func.attrname in ('getoutput', 'getstatusoutput'):
             return True
+
+    # asyncio module
+    if (node.func.expr.name == 'asyncio' and node.func.attrname == 'create_subprocess_shell') or (
+        node.func.expr.name == 'loop' and node.func.attrname == 'subprocess_shell'
+    ):
+        return True
+
     return False
 
 
@@ -229,9 +244,14 @@ class SecureCodingStandardChecker(BaseChecker):
         ),
         'E8002': ('Avoid using `os.sytem()`', 'avoid-os-system', 'Use of `os.system()` should be avoided'),
         'E8003': (
-            'Avoid using `shell=True` when calling `subprocess` functions',
+            'Avoid using `shell=True` when calling `subprocess` functions and avoid functions that internally call it',
             'avoid-shell-true',
-            'Use of `shell=True` in subprocess functions should be avoided',
+            ' '.join(
+                [
+                    'Use of `shell=True` in subprocess functions or use of functions that internally set it should be'
+                    'should be avoided',
+                ]
+            ),
         ),
         'R8004': (
             'Avoid using `tempfile.mktemp()`, prefer `tempfile.mkstemp()` instead',
@@ -292,7 +312,7 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('avoid-os-system', node=node)
         elif _is_os_path_call(node):
             self.add_message('replace-os-relpath-abspath', node=node)
-        elif _is_subprocess_shell_true_call(node):
+        elif _is_shell_true_call(node):
             self.add_message('avoid-shell-true', node=node)
         elif _is_os_popen_call(node):
             self.add_message('avoid-os-popen', node=node)
@@ -320,6 +340,11 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('replace-mktemp', node=node)
         elif node.modname in ('os.path', 'op') and [name for (name, _) in node.names if name in ('relpath', 'abspath')]:
             self.add_message('replace-os-relpath-abspath', node=node)
+        elif (
+            node.modname == 'subprocess'
+            and [name for (name, _) in node.names if name in ('getoutput', 'getstatusoutput')]
+        ) or ((node.modname == 'asyncio' and [name for (name, _) in node.names if name == 'create_subprocess_shell'])):
+            self.add_message('avoid-shell-true', node=node)
         elif node.modname == 'os' and [name for (name, _) in node.names if name == 'system']:
             self.add_message('avoid-os-system', node=node)
         elif node.modname == 'os' and [name for (name, _) in node.names if name == 'popen']:

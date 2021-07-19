@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+-   Reworded E8003 and extend it to include a few more cases:
+    + `subprocess.getoutput()`
+    + `subprocess.getstatusoutput()`
+    + `asyncio.create_subprocess_shell()`
+    + `loop.subprocess_shell()`
+
 ## [1.2.0] - 2021-07-19
 
 ### Added
