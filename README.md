@@ -25,7 +25,30 @@ pylint plugin that enforces some secure coding standards.
 | R8009 | Use of builtin `open` for writing is discouraged in favor of `os.open` to allow for setting file permissions |
 | E8010 | Avoid using `os.popen()` as it internally uses `subprocess.Popen` with `shell=True`                          |
 | E8011 | Use of `shlex.quote()` should be avoided on non-POSIX platforms                                              |
+| W8012 | Avoid using `os.open` with unsafe permissions permissions                                                    |
 
+
+## Plugin configuration options
+
+### File permissions when using `os.open`
+
+Since version 1.3.0 you can control whether this plugin favors `os.open` over the builtin `open` function when opening files.
+
+```toml
+    [tool.pylint.plugins]
+    os-open-mode = '0'            # check disabled
+    os-open-mode = '0o000'        # check disabled
+    os-open-mode = '493'          # all modes from 0 to 0o755
+    os-open-mode = '0o755'        # all modes from 0 to 0o755
+    os-open-mode = '0o755,'       # only 0o755
+    os-open-mode = '0o644,0o755'  # only 0o644 and 0o755
+```
+
+You can also specify this option directly on the command line:
+
+```sh
+python3 -m pylint --load-plugins=pylint_secure_coding_standard --os-open-mode='0o755'
+```
 
 ## Pre-commit hook
 

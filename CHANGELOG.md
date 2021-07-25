@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+-   Add plugin option to control whether we favour `os.open` over the builtin `open`
+-   Added W8012 to warn when using `os.open` with unsafe permissions
+
 ### Repository
 
 -   Update pre-commit hooks

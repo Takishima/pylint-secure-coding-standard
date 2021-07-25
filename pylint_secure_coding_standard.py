@@ -226,9 +226,24 @@ def _is_shlex_quote_call(node):
 class SecureCodingStandardChecker(BaseChecker):
     """Plugin class."""
 
-    __implements__ = IAstroidChecker
+    DEFAULT_MAX_MODE = 0o755
+    W8012_DISPLAY_MSG = 'Avoid using `os.open` with unsafe permissions permissions'
+
+    __implements__ = (IAstroidChecker,)
 
     name = 'secure-coding-standard'
+    options = (
+        (
+            'os-open-mode',
+            {
+                'default': False,
+                'type': 'string',
+                'metavar': '<os-open-mode>',
+                'help': 'Integer or comma-separated list of integers (octal or decimal) of allowed modes. If set to a '
+                'truthful value (ie. >0 or non-empty list), this checker will prefer `os.open` over the builtin `open`',
+            },
+        ),
+    )
     priority = -1
 
     msg = {
@@ -294,9 +309,18 @@ class SecureCodingStandardChecker(BaseChecker):
             'avoid-shlex-quote-on-non-posix',
             'Use of `shlex.quote()` should be avoided on non-POSIX platforms (such as Windows)',
         ),
+        'W8012': (
+            W8012_DISPLAY_MSG,
+            'os-open-unsafe-permissions',
+            'Avoid using `os.open` with unsafe file permissions (by default 0 <= mode <= 0o755)',
+        ),
     }
 
-    options = {}
+    def __init__(self, *args, **kwargs):
+        """Initialize a SecureCodingStandardChecker object."""
+        super().__init__(*args, **kwargs)
+        self._prefer_os_open = False
+        self._os_open_mode_allowed = []
 
     def visit_call(self, node):
         """Visitor method called for astroid.Call nodes."""
@@ -316,7 +340,7 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('avoid-shell-true', node=node)
         elif _is_os_popen_call(node):
             self.add_message('avoid-os-popen', node=node)
-        elif _is_builtin_open_for_writing(node):
+        elif _is_builtin_open_for_writing(node) and self._prefer_os_open:
             self.add_message('replace-builtin-open', node=node)
         elif isinstance(node.func, astroid.Name) and (node.func.name in ('eval', 'exec')):
             self.add_message('avoid-eval-exec', node=node)
@@ -354,15 +378,84 @@ class SecureCodingStandardChecker(BaseChecker):
 
     def visit_with(self, node):
         """Visitor method called for astroid.With nodes."""
-        for item in node.items:
-            if item and isinstance(item[0], astroid.Call) and _is_builtin_open_for_writing(item[0]):
-                self.add_message('replace-builtin-open', node=node)
+        if self._prefer_os_open:
+            for item in node.items:
+                if item and isinstance(item[0], astroid.Call) and _is_builtin_open_for_writing(item[0]):
+                    self.add_message('replace-builtin-open', node=node)
 
     def visit_assert(self, node):
         """Visitor method called for astroid.Assert nodes."""
         self.add_message('avoid-assert', node=node)
 
+    def set_os_open_mode(self, arg):
+        """
+        Control whether we prefer `os.open` over the builtin `open`.
+
+        Args:
+            arg (str): String with with mode value. Can be either of:
+                - 'yes', 'y', 'true' (case-insensitive)
+                    The maximum mode value is then set to self.DEFAULT_MAX_MODE
+                - a single octal or decimal integer
+                    The maximum mode value is then set to that integer value
+                - a comma-separated list of integers (octal or decimal)
+                    The allowed mode values are then those found in the list
+                - anything else will disable the feature
+        """
+
+        def _str_to_int(arg):
+            try:
+                return int(arg, 8)
+            except ValueError:
+                return int(arg)
+
+        def _update_display_msg(suffix=''):
+            self.msg['W8012'] = (self.W8012_DISPLAY_MSG + suffix, self.msg['W8012'][1], self.msg['W8012'][2])
+
+        arg = arg.lower()
+        modes = [mode.strip() for mode in arg.split(',')]
+
+        if len(modes) > 1:
+            # Lists of allowed modes
+            try:
+                self._os_open_mode_allowed = [_str_to_int(mode) for mode in modes if mode]
+                if not self._os_open_mode_allowed:
+                    raise ValueError('Calculated empty value for `os_open_mode`!')
+                self._prefer_os_open = True
+                _update_display_msg(suffix=f' (mode in {modes})')
+            except ValueError as error:
+                raise ValueError(f'Unable to convert {modes} elements to integers!') from error
+        elif modes and modes[0]:
+            # Single values (ie. max allowed value for mode)
+            try:
+                val = _str_to_int(arg)
+                self._prefer_os_open = val > 0
+                if self._prefer_os_open:
+                    self._os_open_mode_allowed = list(range(0, val + 1))
+                    _update_display_msg(suffix=f' (mode <= {arg})')
+                else:
+                    self._os_open_mode_allowed.clear()
+            except ValueError as error:
+                if arg in ('y', 'yes', 'true'):
+                    self._prefer_os_open = True
+                    self._os_open_mode_allowed = list(range(0, self.DEFAULT_MAX_MODE + 1))
+                    _update_display_msg(suffix=f' (mode <= {oct(self.DEFAULT_MAX_MODE)})')
+                elif arg in ('n', 'no', 'false'):
+                    self._prefer_os_open = False
+                    self._os_open_mode_allowed.clear()
+                else:
+                    raise ValueError(f'Invalid value for `os_open_mode`: {arg}!') from error
+        else:
+            raise ValueError(f'Invalid value for `os_open_mode`: {arg}!')
+
 
 def register(linter):  # pragma: no cover
     """Register the plugin to Pylint."""
     linter.register_checker(SecureCodingStandardChecker(linter))
+
+
+def load_configuration(linter):  # pragma: no cover
+    """Load data from the configuration file."""
+    for checker in linter.get_checkers():
+        if isinstance(checker, SecureCodingStandardChecker):
+            checker.set_os_open_mode(checker.config.os_open_mode)
+            break
