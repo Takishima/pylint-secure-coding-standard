@@ -56,7 +56,7 @@ repos:
 
       - id: flake8
         name: flake8-test-files
-        additional_dependencies: [flake8-comprehensions, flake8-breakpoint,
+        additional_dependencies: [flake8-breakpoint, flake8-comprehensions,
                                   flake8-eradicate, flake8-mutable]
         files: ^(.*_test\.py)$
 
