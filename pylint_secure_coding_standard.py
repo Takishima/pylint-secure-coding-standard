@@ -35,22 +35,16 @@ def _is_posix():
 # ==============================================================================
 
 
-def _is_os_system_call(node):
+def _is_function_call(node, module, function):
     return (
         isinstance(node.func, astroid.Attribute)
         and isinstance(node.func.expr, astroid.Name)
-        and node.func.expr.name == 'os'
-        and node.func.attrname == 'system'
+        and node.func.expr.name == module
+        and node.func.attrname == function
     )
 
 
-def _is_os_popen_call(node):
-    return (
-        isinstance(node.func, astroid.Attribute)
-        and isinstance(node.func.expr, astroid.Name)
-        and node.func.expr.name == 'os'
-        and node.func.attrname == 'popen'
-    )
+# ------------------------------------------------------------------------------
 
 
 def _is_os_path_call(node):
@@ -95,37 +89,27 @@ def _is_builtin_open_for_writing(node):
     return False
 
 
-def _is_os_open(node):
-    return (
-        isinstance(node.func, astroid.Attribute)
-        and isinstance(node.func.expr, astroid.Name)
-        and node.func.attrname == 'open'
-        and node.func.expr.name == 'os'
-    )
-
-
 def _is_os_open_allowed_mode(node, allowed_modes):
-    if _is_os_open(node):
-        mode = None
-        flags = None  # pylint: disable=unused-variable
-        if len(node.args) > 1 and isinstance(node.args[1], (astroid.Attribute, astroid.BinOp)):
-            # Cover:
-            #  * os.open(xxx, os.O_WRONLY)
-            #  * os.open(xxx, os.O_WRONLY | os.O_CREATE)
-            #  * os.open(xxx, os.O_WRONLY | os.O_CREATE | os.O_FSYNC)
-            flags = node.args[1]
-        if len(node.args) > 2 and isinstance(node.args[2], astroid.Const):
-            mode = node.args[2].value
-        elif node.keywords:
-            for keyword in node.keywords:
-                if keyword.arg == 'flags':
-                    flags = keyword.value  # pylint: disable=unused-variable # noqa: F841
-                if keyword.arg == 'mode':
-                    mode = keyword.value.value
-                    break
-        if mode is not None:
-            # TODO: condition check on the flags value if present (ie. ignore if read-only)
-            return mode in allowed_modes
+    mode = None
+    flags = None  # pylint: disable=unused-variable
+    if len(node.args) > 1 and isinstance(node.args[1], (astroid.Attribute, astroid.BinOp)):
+        # Cover:
+        #  * os.open(xxx, os.O_WRONLY)
+        #  * os.open(xxx, os.O_WRONLY | os.O_CREATE)
+        #  * os.open(xxx, os.O_WRONLY | os.O_CREATE | os.O_FSYNC)
+        flags = node.args[1]
+    if len(node.args) > 2 and isinstance(node.args[2], astroid.Const):
+        mode = node.args[2].value
+    elif node.keywords:
+        for keyword in node.keywords:
+            if keyword.arg == 'flags':
+                flags = keyword.value  # pylint: disable=unused-variable # noqa: F841
+            if keyword.arg == 'mode':
+                mode = keyword.value.value
+                break
+    if mode is not None:
+        # TODO: condition check on the flags value if present (ie. ignore if read-only)
+        return mode in allowed_modes
 
     # NB: default to True in all other cases
     return True
@@ -234,26 +218,6 @@ def _is_yaml_unsafe_call(node):
             #  * full_load(...)
             return True
     return False
-
-
-def _is_jsonpickle_encode_call(node):
-    if isinstance(node.func, astroid.Attribute):
-        if (
-            isinstance(node.func.expr, astroid.Name)
-            and node.func.expr.name == 'jsonpickle'
-            and node.func.attrname == 'decode'
-        ):
-            return True
-    return False
-
-
-def _is_shlex_quote_call(node):
-    return (
-        isinstance(node.func, astroid.Attribute)
-        and isinstance(node.func.expr, astroid.Name)
-        and node.func.expr.name == 'shlex'
-        and node.func.attrname == 'quote'
-    )
 
 
 # ==============================================================================
@@ -366,24 +330,24 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('replace-mktemp', node=node)
         elif _is_yaml_unsafe_call(node):
             self.add_message('avoid-yaml-unsafe-load', node=node)
-        elif _is_jsonpickle_encode_call(node):
+        elif _is_function_call(node, module='jsonpickle', function='decode'):
             self.add_message('avoid-jsonpickle-decode', node=node)
-        elif _is_os_system_call(node):
+        elif _is_function_call(node, module='os', function='system'):
             self.add_message('avoid-os-system', node=node)
         elif _is_os_path_call(node):
             self.add_message('replace-os-relpath-abspath', node=node)
         elif _is_shell_true_call(node):
             self.add_message('avoid-shell-true', node=node)
-        elif _is_os_popen_call(node):
+        elif _is_function_call(node, module='os', function='popen'):
             self.add_message('avoid-os-popen', node=node)
         elif _is_builtin_open_for_writing(node) and self._prefer_os_open:
             self.add_message('replace-builtin-open', node=node)
         elif isinstance(node.func, astroid.Name) and (node.func.name in ('eval', 'exec')):
             self.add_message('avoid-eval-exec', node=node)
-        elif not _is_posix() and _is_shlex_quote_call(node):
+        elif not _is_posix() and _is_function_call(node, module='shlex', function='quote'):
             self.add_message('avoid-shlex-quote-on-non-posix', node=node)
         elif (
-            _is_os_open(node)
+            _is_function_call(node, module='os', function='open')
             and self._prefer_os_open
             and not _is_os_open_allowed_mode(node, self._os_open_modes_allowed)
         ):
@@ -425,7 +389,9 @@ class SecureCodingStandardChecker(BaseChecker):
                 if item and isinstance(item[0], astroid.Call):
                     if _is_builtin_open_for_writing(item[0]):
                         self.add_message('replace-builtin-open', node=node)
-                    elif _is_os_open(item[0]) and not _is_os_open_allowed_mode(item[0], self._os_open_modes_allowed):
+                    elif _is_function_call(item[0], module='os', function='open') and not _is_os_open_allowed_mode(
+                        item[0], self._os_open_modes_allowed
+                    ):
                         self.add_message('os-open-unsafe-permissions', node=node)
 
     def visit_assert(self, node):
