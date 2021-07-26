@@ -23,25 +23,37 @@ import pylint_secure_coding_standard as pylint_scs
 class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     CHECKER_CLASS = pylint_scs.SecureCodingStandardChecker
 
-    def test_jsonpickle_decode_ok(self):
+    def test_shelve_open_ok(self):
         nodes = astroid.extract_node(
             """
             int(0) #@
             foo() #@
-            jsonpickle.encode(pvars) #@
             """
         )
 
         with self.assertNoMessages():
             for node in nodes:
-                print(node)
                 self.checker.visit_call(node)
 
-    @pytest.mark.parametrize(
-        's',
-        ('jsonpickle.decode(payload)',),
+    _not_ok = (
+        'shelve.open("file.txt")',
+        'shelve.open(filename)',
     )
-    def test_jsonpickle_decode_not_ok(self, s):
+
+    @pytest.mark.parametrize('s', _not_ok)
+    def test_shelve_open_call(self, s):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(pylint.testutils.Message(msg_id='avoid-jsonpickle-decode', node=node)):
+        with self.assertAddsMessages(pylint.testutils.Message(msg_id='avoid-shelve-open', node=node)):
             self.checker.visit_call(node)
+
+    @pytest.mark.parametrize('s', _not_ok)
+    def test_shelve_open_with(self, s):
+        node = astroid.extract_node(f'with {s} as fd: fd.read() #@')
+        with self.assertAddsMessages(pylint.testutils.Message(msg_id='avoid-shelve-open', node=node)):
+            self.checker.visit_with(node)
+
+    @pytest.mark.parametrize('s', ('from shelve import open',))
+    def test_shelve_open_importfrom(self, s):
+        node = astroid.extract_node(s + ' #@')
+        with self.assertAddsMessages(pylint.testutils.Message(msg_id='avoid-shelve-open', node=node)):
+            self.checker.visit_importfrom(node)

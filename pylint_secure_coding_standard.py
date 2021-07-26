@@ -36,11 +36,13 @@ def _is_posix():
 
 
 def _is_function_call(node, module, function):
+    if not isinstance(function, (list, tuple)):
+        function = (function,)
     return (
         isinstance(node.func, astroid.Attribute)
         and isinstance(node.func.expr, astroid.Name)
         and node.func.expr.name == module
-        and node.func.attrname == function
+        and node.func.attrname in function
     )
 
 
@@ -314,6 +316,21 @@ class SecureCodingStandardChecker(BaseChecker):
             'os-open-unsafe-permissions',
             'Avoid using `os.open` with unsafe file permissions (by default 0 <= mode <= 0o755)',
         ),
+        'E8013': (
+            'Avoid using `pickle.load` and `pickle.loads`',
+            'avoid-pickle-load',
+            'Use of `pickle.load` and `pickle.loads` should be avoided in favour of safer file formats',
+        ),
+        'E8014': (
+            'Avoid using `marshal.load` and `marshal.loads`',
+            'avoid-marshal-load',
+            'Use of `marshal.load` and `marshal.loads` should be avoided in favour of safer file formats',
+        ),
+        'E8015': (
+            'Avoid using `shelve.open()`',
+            'avoid-shelve-open',
+            'Use of `shelve.open()` should be avoided in favour of safer file formats',
+        ),
     }
 
     def __init__(self, *args, **kwargs):
@@ -322,7 +339,7 @@ class SecureCodingStandardChecker(BaseChecker):
         self._prefer_os_open = False
         self._os_open_modes_allowed = []
 
-    def visit_call(self, node):
+    def visit_call(self, node):  # pylint: disable=too-many-branches
         """Visitor method called for astroid.Call nodes."""
         if _is_pdb_call(node):
             self.add_message('avoid-debug-stmt', node=node)
@@ -352,6 +369,12 @@ class SecureCodingStandardChecker(BaseChecker):
             and not _is_os_open_allowed_mode(node, self._os_open_modes_allowed)
         ):
             self.add_message('os-open-unsafe-permissions', node=node)
+        elif _is_function_call(node, module='pickle', function=('load', 'loads')):
+            self.add_message('avoid-pickle-load', node=node)
+        elif _is_function_call(node, module='marshal', function=('load', 'loads')):
+            self.add_message('avoid-marshal-load', node=node)
+        elif _is_function_call(node, module='shelve', function='open'):
+            self.add_message('avoid-shelve-open', node=node)
 
     def visit_import(self, node):
         """Visitor method called for astroid.Import nodes."""
@@ -381,18 +404,26 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('avoid-os-popen', node=node)
         elif not _is_posix() and node.modname == 'shlex' and [name for (name, _) in node.names if name == 'quote']:
             self.add_message('avoid-shlex-quote-on-non-posix', node=node)
+        elif node.modname == 'pickle' and [name for (name, _) in node.names if name in ('load', 'loads')]:
+            self.add_message('avoid-pickle-load', node=node)
+        elif node.modname == 'marshal' and [name for (name, _) in node.names if name in ('load', 'loads')]:
+            self.add_message('avoid-marshal-load', node=node)
+        elif node.modname == 'shelve' and [name for (name, _) in node.names if name == 'open']:
+            self.add_message('avoid-shelve-open', node=node)
 
     def visit_with(self, node):
         """Visitor method called for astroid.With nodes."""
-        if self._prefer_os_open:
-            for item in node.items:
-                if item and isinstance(item[0], astroid.Call):
+        for item in node.items:
+            if item and isinstance(item[0], astroid.Call):
+                if self._prefer_os_open:
                     if _is_builtin_open_for_writing(item[0]):
                         self.add_message('replace-builtin-open', node=node)
                     elif _is_function_call(item[0], module='os', function='open') and not _is_os_open_allowed_mode(
                         item[0], self._os_open_modes_allowed
                     ):
                         self.add_message('os-open-unsafe-permissions', node=node)
+                elif _is_function_call(item[0], module='shelve', function='open'):
+                    self.add_message('avoid-shelve-open', node=node)
 
     def visit_assert(self, node):
         """Visitor method called for astroid.Assert nodes."""

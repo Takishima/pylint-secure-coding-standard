@@ -11,6 +11,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Add plugin option to control whether we favour `os.open` over the builtin `open`
 -   Added W8012 to warn when using `os.open` with unsafe permissions
+-   Added E8013 to avoid using `pickle.load` and `pickle.loads`
+-   Added E8014 to avoid using `marshal.load` and `marshal.loads`
+-   Added E8015 to avoid using `shelve.open`
+
+### Fixed
+
+-   Fixed a few test function names
 
 ### Repository
 

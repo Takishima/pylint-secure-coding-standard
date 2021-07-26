@@ -23,25 +23,42 @@ import pylint_secure_coding_standard as pylint_scs
 class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     CHECKER_CLASS = pylint_scs.SecureCodingStandardChecker
 
-    def test_jsonpickle_decode_ok(self):
+    def test_pickle_load_ok(self):
         nodes = astroid.extract_node(
             """
             int(0) #@
             foo() #@
-            jsonpickle.encode(pvars) #@
+            pickle.dump(data, "file.txt") #@
+            pickle.dumps(data) #@
             """
         )
 
         with self.assertNoMessages():
             for node in nodes:
-                print(node)
                 self.checker.visit_call(node)
 
     @pytest.mark.parametrize(
         's',
-        ('jsonpickle.decode(payload)',),
+        (
+            'pickle.load("file.txt")',
+            r'pickle.loads(b"\x80\x04K\x01.")',
+            'pickle.loads(data)',
+        ),
     )
-    def test_jsonpickle_decode_not_ok(self, s):
+    def test_pickle_load_not_ok(self, s):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(pylint.testutils.Message(msg_id='avoid-jsonpickle-decode', node=node)):
+        with self.assertAddsMessages(pylint.testutils.Message(msg_id='avoid-pickle-load', node=node)):
             self.checker.visit_call(node)
+
+    @pytest.mark.parametrize(
+        's',
+        (
+            'from pickle import load',
+            'from pickle import loads',
+            'from pickle import dump, load',
+        ),
+    )
+    def test_pickle_open_importfrom(self, s):
+        node = astroid.extract_node(s + ' #@')
+        with self.assertAddsMessages(pylint.testutils.Message(msg_id='avoid-pickle-load', node=node)):
+            self.checker.visit_importfrom(node)

@@ -25,7 +25,10 @@ pylint plugin that enforces some secure coding standards.
 | R8009 | Use of builtin `open` for writing is discouraged in favor of `os.open` to allow for setting file permissions |
 | E8010 | Avoid using `os.popen()` as it internally uses `subprocess.Popen` with `shell=True`                          |
 | E8011 | Use of `shlex.quote()` should be avoided on non-POSIX platforms                                              |
-| W8012 | Avoid using `os.open` with unsafe permissions permissions                                                    |
+| W8012 | Avoid using `os.open()` with unsafe permissions permissions                                                  |
+| E8013 | Avoid using `pickle.load()` and `pickle.loads()`                                                             |
+| E8014 | Avoid using `marshal.load()` and `marshal.loads()`                                                           |
+| E8015 | Avoid using `shelve.open()`                                                                                  |
 
 
 ## Plugin configuration options
