@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2021-07-26
+
 ### Added
 
 -   Add plugin option to control whether we favour `os.open` over the builtin `open`
@@ -53,7 +55,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release
 
-[Unreleased]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.2.1...HEAD
+[Unreleased]: https://github.com/Takishima/pylint-secure-coding-standard/compare/1.3.0...HEAD
+
+[1.3.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/1.2.1...1.3.0
 
 [1.2.1]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.2.0...v1.2.1
 
