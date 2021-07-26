@@ -95,6 +95,42 @@ def _is_builtin_open_for_writing(node):
     return False
 
 
+def _is_os_open(node):
+    return (
+        isinstance(node.func, astroid.Attribute)
+        and isinstance(node.func.expr, astroid.Name)
+        and node.func.attrname == 'open'
+        and node.func.expr.name == 'os'
+    )
+
+
+def _is_os_open_allowed_mode(node, allowed_modes):
+    if _is_os_open(node):
+        mode = None
+        flags = None  # pylint: disable=unused-variable
+        if len(node.args) > 1 and isinstance(node.args[1], (astroid.Attribute, astroid.BinOp)):
+            # Cover:
+            #  * os.open(xxx, os.O_WRONLY)
+            #  * os.open(xxx, os.O_WRONLY | os.O_CREATE)
+            #  * os.open(xxx, os.O_WRONLY | os.O_CREATE | os.O_FSYNC)
+            flags = node.args[1]
+        if len(node.args) > 2 and isinstance(node.args[2], astroid.Const):
+            mode = node.args[2].value
+        elif node.keywords:
+            for keyword in node.keywords:
+                if keyword.arg == 'flags':
+                    flags = keyword.value  # pylint: disable=unused-variable # noqa: F841
+                if keyword.arg == 'mode':
+                    mode = keyword.value.value
+                    break
+        if mode is not None:
+            # TODO: condition check on the flags value if present (ie. ignore if read-only)
+            return mode in allowed_modes
+
+    # NB: default to True in all other cases
+    return True
+
+
 def _is_shell_true_call(node):
     if not (isinstance(node.func, astroid.Attribute) and isinstance(node.func.expr, astroid.Name)):
         return False
@@ -320,7 +356,7 @@ class SecureCodingStandardChecker(BaseChecker):
         """Initialize a SecureCodingStandardChecker object."""
         super().__init__(*args, **kwargs)
         self._prefer_os_open = False
-        self._os_open_mode_allowed = []
+        self._os_open_modes_allowed = []
 
     def visit_call(self, node):
         """Visitor method called for astroid.Call nodes."""
@@ -346,6 +382,12 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('avoid-eval-exec', node=node)
         elif not _is_posix() and _is_shlex_quote_call(node):
             self.add_message('avoid-shlex-quote-on-non-posix', node=node)
+        elif (
+            _is_os_open(node)
+            and self._prefer_os_open
+            and not _is_os_open_allowed_mode(node, self._os_open_modes_allowed)
+        ):
+            self.add_message('os-open-unsafe-permissions', node=node)
 
     def visit_import(self, node):
         """Visitor method called for astroid.Import nodes."""
@@ -380,8 +422,11 @@ class SecureCodingStandardChecker(BaseChecker):
         """Visitor method called for astroid.With nodes."""
         if self._prefer_os_open:
             for item in node.items:
-                if item and isinstance(item[0], astroid.Call) and _is_builtin_open_for_writing(item[0]):
-                    self.add_message('replace-builtin-open', node=node)
+                if item and isinstance(item[0], astroid.Call):
+                    if _is_builtin_open_for_writing(item[0]):
+                        self.add_message('replace-builtin-open', node=node)
+                    elif _is_os_open(item[0]) and not _is_os_open_allowed_mode(item[0], self._os_open_modes_allowed):
+                        self.add_message('os-open-unsafe-permissions', node=node)
 
     def visit_assert(self, node):
         """Visitor method called for astroid.Assert nodes."""
@@ -417,8 +462,8 @@ class SecureCodingStandardChecker(BaseChecker):
         if len(modes) > 1:
             # Lists of allowed modes
             try:
-                self._os_open_mode_allowed = [_str_to_int(mode) for mode in modes if mode]
-                if not self._os_open_mode_allowed:
+                self._os_open_modes_allowed = [_str_to_int(mode) for mode in modes if mode]
+                if not self._os_open_modes_allowed:
                     raise ValueError('Calculated empty value for `os_open_mode`!')
                 self._prefer_os_open = True
                 _update_display_msg(suffix=f' (mode in {modes})')
@@ -430,18 +475,18 @@ class SecureCodingStandardChecker(BaseChecker):
                 val = _str_to_int(arg)
                 self._prefer_os_open = val > 0
                 if self._prefer_os_open:
-                    self._os_open_mode_allowed = list(range(0, val + 1))
+                    self._os_open_modes_allowed = list(range(0, val + 1))
                     _update_display_msg(suffix=f' (mode <= {arg})')
                 else:
-                    self._os_open_mode_allowed.clear()
+                    self._os_open_modes_allowed.clear()
             except ValueError as error:
                 if arg in ('y', 'yes', 'true'):
                     self._prefer_os_open = True
-                    self._os_open_mode_allowed = list(range(0, self.DEFAULT_MAX_MODE + 1))
+                    self._os_open_modes_allowed = list(range(0, self.DEFAULT_MAX_MODE + 1))
                     _update_display_msg(suffix=f' (mode <= {oct(self.DEFAULT_MAX_MODE)})')
                 elif arg in ('n', 'no', 'false'):
                     self._prefer_os_open = False
-                    self._os_open_mode_allowed.clear()
+                    self._os_open_modes_allowed.clear()
                 else:
                     raise ValueError(f'Invalid value for `os_open_mode`: {arg}!') from error
         else:

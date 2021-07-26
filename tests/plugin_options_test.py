@@ -64,10 +64,9 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
     def test_os_open_mode_option(self, arg, prefer_os_open, allowed_modes):
         print(f'INFO: allowed_modes: {allowed_modes}')
-        print(self.checker._os_open_mode_allowed)
         self.checker.set_os_open_mode(arg)
         assert self.checker._prefer_os_open == prefer_os_open
-        assert self.checker._os_open_mode_allowed == allowed_modes
+        assert self.checker._os_open_modes_allowed == allowed_modes
 
     @pytest.mark.parametrize('arg', ('', ',', ',,', 'asd', 'a,', '493, a'))
     def test_os_open_mode_option_invalid(self, arg):

@@ -61,6 +61,10 @@ build-backend = "setuptools.build_meta"
     [tool.pylint.reports]
     msg-template = '{path}:{line}: [{msg_id}, {obj}] {msg} ({symbol})'
 
+    [tool.pylint.messages_control]
+    disable = [
+         'fixme'
+    ]
 
 [tool.pytest.ini_options]
 minversion = '6.0'
