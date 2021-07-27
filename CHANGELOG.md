@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Fix issue when processing keyword arguments for `os.open()`
 
+### Repository
+
+-   Restrict running some GitHub actions only when pull requests are updated
+
 ## [1.3.0] - 2021-07-26
 
 ### Added
