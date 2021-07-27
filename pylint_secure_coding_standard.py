@@ -159,7 +159,7 @@ def _is_allowed_mode(node, allowed_modes):
         mode = node.args[1].value
     elif node.keywords:
         for keyword in node.keywords:
-            if keyword.arg == 'mode':
+            if keyword.arg == 'mode' and isinstance(keyword.value, astroid.Const):
                 mode = keyword.value.value
                 break
     if mode is not None:
