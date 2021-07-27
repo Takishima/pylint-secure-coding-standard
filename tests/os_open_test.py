@@ -33,37 +33,78 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             int(0) #@
             foo() #@
             os.open("file.txt") #@
+            os.open("file.txt", flags, mode) #@
             os.open("file.txt", os.O_RDONLY) #@
+            os.open("file.txt", os.O_RDONLY, mode) #@
             os.open("file.txt", os.O_RDONLY, 0o644) #@
             os.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW) #@
+            os.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, mode) #@
             os.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, 0o644) #@
+            os.open("file.txt", os.O_RDONLY, mode=mode) #@
+            os.open("file.txt", os.O_RDONLY, mode=0o644) #@
+            os.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, mode=mode) #@
+            os.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, mode=0o644) #@
             bla.open("file.txt") #@
             bla.open("file.txt", os.O_RDONLY) #@
+            bla.open("file.txt", flags=os.O_RDONLY) #@
+            bla.open("file.txt", os.O_RDONLY, mode) #@
             bla.open("file.txt", os.O_RDONLY, 0o644) #@
-            bla.open("file.txt", os.O_RDONLY, 0o755) #@
+            bla.open("file.txt", os.O_RDONLY, 0o777) #@
             bla.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW) #@
+            bla.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, mode) #@
             bla.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, 0o644) #@
-            bla.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, 0o755) #@
+            bla.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, 0o777) #@
+            bla.open("file.txt", os.O_RDONLY, mode=mode) #@
+            bla.open("file.txt", os.O_RDONLY, mode=0o644) #@
+            bla.open("file.txt", os.O_RDONLY, mode=0o777) #@
+            bla.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW) #@
+            bla.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, mode=mode) #@
+            bla.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, mode=0o644) #@
+            bla.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, mode=0o777) #@
             with os.open("file.txt") as fd: fd.read() #@
+            with os.open("file.txt", flags, mode) as fd: fd.read() #@
             with os.open("file.txt", os.O_RDONLY) as fd: fd.read() #@
+            with os.open("file.txt", os.O_RDONLY, mode) as fd: fd.read() #@
             with os.open("file.txt", os.O_RDONLY, 0o644) as fd: fd.read() #@
             with os.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW) as fd: fd.read() #@
+            with os.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, mode) as fd: fd.read() #@
             with os.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, 0o644) as fd: fd.read() #@
+            with os.open("file.txt", flags=flags, mode=mode) as fd: fd.read() #@
+            with os.open("file.txt", flags=os.O_RDONLY, mode=mode) as fd: fd.read() #@
+            with os.open("file.txt", flags=os.O_RDONLY, mode=0o644) as fd: fd.read() #@
+            with os.open("file.txt", flags=os.O_RDONLY | os.O_NOFOLLOW, mode=mode) as fd: fd.read() #@
+            with os.open("file.txt", flags=os.O_RDONLY | os.O_NOFOLLOW, mode=0o644) as fd: fd.read() #@
             with bla.open("file.txt") as fd: fd.read() #@
             with bla.open("file.txt", os.O_RDONLY) as fd: fd.read() #@
+            with bla.open("file.txt", os.O_RDONLY, mode) as fd: fd.read() #@
             with bla.open("file.txt", os.O_RDONLY, 0o644) as fd: fd.read() #@
-            with bla.open("file.txt", os.O_RDONLY, 0o755) as fd: fd.read() #@
+            with bla.open("file.txt", os.O_RDONLY, 0o777) as fd: fd.read() #@
             with bla.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW) as fd: fd.read() #@
+            with bla.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, mode) as fd: fd.read() #@
             with bla.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, 0o644) as fd: fd.read() #@
-            with bla.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, 0o755) as fd: fd.read() #@
+            with bla.open("file.txt", os.O_RDONLY | os.O_NOFOLLOW, 0o777) as fd: fd.read() #@
+            with bla.open("file.txt", flags=os.O_RDONLY) as fd: fd.read() #@
+            with bla.open("file.txt", flags=os.O_RDONLY, mode=mode) as fd: fd.read() #@
+            with bla.open("file.txt", flags=os.O_RDONLY, mode=0o644) as fd: fd.read() #@
+            with bla.open("file.txt", flags=os.O_RDONLY, mode=0o777) as fd: fd.read() #@
+            with bla.open("file.txt", flags=os.O_RDONLY | os.O_NOFOLLOW, mode=mode) as fd: fd.read() #@
+            with bla.open("file.txt", flags=os.O_RDONLY | os.O_NOFOLLOW, mode=0o644) as fd: fd.read() #@
+            with bla.open("file.txt", flags=os.O_RDONLY | os.O_NOFOLLOW, mode=0o777) as fd: fd.read() #@
             """
         )
 
         self.checker.set_os_open_mode('True')
         assert self.checker._prefer_os_open
 
-        call_nodes = nodes[:14]
-        with_nodes = nodes[14:]
+        call_nodes = []
+        with_nodes = []
+
+        # Find index of first line starting with 'with'
+        for node in nodes:
+            if isinstance(node, astroid.With):
+                with_nodes.append(node)
+            else:
+                call_nodes.append(node)
 
         with self.assertNoMessages():
             for idx, node in enumerate(call_nodes):

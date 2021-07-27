@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Updated
+
+-   Update unit tests for `os.open()`
+
+### Fixed
+
+-   Fix issue when processing keyword arguments for `os.open()`
+
 ## [1.3.0] - 2021-07-26
 
 ### Added

@@ -104,9 +104,9 @@ def _is_os_open_allowed_mode(node, allowed_modes):
         mode = node.args[2].value
     elif node.keywords:
         for keyword in node.keywords:
-            if keyword.arg == 'flags':
+            if keyword.arg == 'flags' and isinstance(keyword.value, (astroid.Attribute, astroid.BinOp)):
                 flags = keyword.value  # pylint: disable=unused-variable # noqa: F841
-            if keyword.arg == 'mode':
+            if keyword.arg == 'mode' and isinstance(keyword.value, astroid.Const):
                 mode = keyword.value.value
                 break
     if mode is not None:
