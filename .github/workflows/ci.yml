@@ -23,6 +23,7 @@ jobs:
 
     name: "🐍 ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
     runs-on: ${{ matrix.runs-on }}
+    if: (github.event_name != 'pull_request' || (github.event_name == 'pull_request' && github.event.pull_request.merged != true))
 
     steps:
     - uses: actions/checkout@v2

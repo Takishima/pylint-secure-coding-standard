@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Added W8017 to warn when using `os.mkfifo` with unsafe permissions (UNIX-only)
 -   Added W8018 to warn when using `os.mknod` with unsafe permissions (UNIX-only)
 
+### Repository
+
+-   Restrict running some GitHub actions when a pull request is merged
+
 ## [1.3.1] - 2021-07-27
 
 ### Updated
