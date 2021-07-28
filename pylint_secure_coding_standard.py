@@ -356,7 +356,7 @@ class SecureCodingStandardChecker(BaseChecker):
     )
     priority = -1
 
-    msg = {
+    msgs = {
         'R8000': (
             'Use `os.path.realpath()` instead of `os.path.abspath()` and `os.path.relpath()`',
             'replace-os-relpath-abspath',
