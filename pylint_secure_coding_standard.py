@@ -15,7 +15,9 @@
 
 """Main file for the pylint_secure_coding_standard plugin."""
 
+import operator
 import platform
+import stat
 
 import astroid
 from pylint.checkers import BaseChecker
@@ -281,22 +283,39 @@ def _is_yaml_unsafe_call(node):
 
 # ==============================================================================
 
-
-def _chmod_is_wx_for_go(value):
-    """
-    Test whether a single mode value is has W or X for group or others.
-
-    Args:
-        value (str): Mode value
-    """
-    return value in (
-        'S_IRWXG',
-        'S_IWGRP',
-        'S_IXGRP',
-        'S_IRWXO',
-        'S_IWOTH',
-        'S_IXOTH',
-    )
+_unop = {'-': operator.neg, 'not': operator.not_}
+_binop = {
+    '+': operator.add,
+    '-': operator.sub,
+    '*': operator.mul,
+    '/': operator.truediv,
+    '//': operator.floordiv,
+    '%': operator.mod,
+    '^': operator.xor,
+    '|': operator.or_,
+    '&': operator.and_,
+}
+_chmod_known_mode_values = (
+    'S_ISUID',
+    'S_ISGID',
+    'S_ENFMT',
+    'S_ISVTX',
+    'S_IREAD',
+    'S_IWRITE',
+    'S_IEXEC',
+    'S_IRWXU',
+    'S_IRUSR',
+    'S_IWUSR',
+    'S_IXUSR',
+    'S_IRWXG',
+    'S_IRGRP',
+    'S_IWGRP',
+    'S_IXGRP',
+    'S_IRWXO',
+    'S_IROTH',
+    'S_IWOTH',
+    'S_IXOTH',
+)
 
 
 def _chmod_get_mode(node):
@@ -305,33 +324,48 @@ def _chmod_get_mode(node):
 
     Args:
         node (astroid.node_classes.NodeNG): an AST node
+
+    Raises:
+        ValueError: if a node is encountered that cannot be processed
     """
-    if isinstance(node, astroid.Name):
-        return [node.name]
-    if isinstance(node, astroid.Attribute) and isinstance(node.expr, astroid.Name) and node.expr.name == 'stat':
-        return [node.attrname]
+    if isinstance(node, astroid.Name) and node.name in _chmod_known_mode_values:
+        return getattr(stat, node.name)
+    if (
+        isinstance(node, astroid.Attribute)
+        and isinstance(node.expr, astroid.Name)
+        and node.attrname in _chmod_known_mode_values
+        and node.expr.name == 'stat'
+    ):
+        return getattr(stat, node.attrname)
+    if isinstance(node, astroid.UnaryOp):
+        return _unop[node.op](_chmod_get_mode(node.operand))
     if isinstance(node, astroid.BinOp):
-        return _chmod_get_mode(node.left) + _chmod_get_mode(node.right)
-    return []
+        return _binop[node.op](_chmod_get_mode(node.left), _chmod_get_mode(node.right))
+
+    raise ValueError(f'Do not know how to process node: {node.repr_tree()}')
 
 
 def _chmod_has_wx_for_go(node):
     if platform.system() == 'Windows':
+        # On Windows, only stat.S_IREAD and stat.S_IWRITE can be used, all other bits are ignored
         return False
 
-    modes = None
-    if len(node.args) > 1:
-        modes = _chmod_get_mode(node.args[1])
-    elif node.keywords:
-        for keyword in node.keywords:
-            if keyword.arg == 'mode':
-                modes = _chmod_get_mode(keyword.value)
-                break
-
-    if modes is None:
-        # NB: this would be from invalid code such as `os.chmod("file.txt")`
-        raise RuntimeError('Unable to extract `mode` argument from function call!')
-    return any(_chmod_is_wx_for_go(mode) for mode in modes)
+    try:
+        modes = None
+        if len(node.args) > 1:
+            modes = _chmod_get_mode(node.args[1])
+        elif node.keywords:
+            for keyword in node.keywords:
+                if keyword.arg == 'mode':
+                    modes = _chmod_get_mode(keyword.value)
+                    break
+    except ValueError:
+        return False
+    else:
+        if modes is None:
+            # NB: this would be from invalid code such as `os.chmod("file.txt")`
+            raise RuntimeError('Unable to extract `mode` argument from function call!')
+        return bool(modes & (stat.S_IWGRP | stat.S_IXGRP | stat.S_IWOTH | stat.S_IXOTH))
 
 
 # ==============================================================================
