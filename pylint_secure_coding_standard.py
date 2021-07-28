@@ -282,6 +282,74 @@ def _is_yaml_unsafe_call(node):
 # ==============================================================================
 
 
+def _chmod_is_allowed_mode(value):
+    """
+    Test whether a single mode value is valid.
+
+    Args:
+        value (str): Mode value
+    """
+    return value in (
+        'S_ISUID',
+        'S_ISGID',
+        'S_ENFMT',
+        'S_ISVTX',
+        'S_IREAD',
+        'S_IWRITE',
+        'S_IEXEC',
+        'S_IRWXU',
+        'S_IRUSR',
+        'S_IWUSR',
+        'S_IXUSR',
+        # 'S_IRWXG',
+        'S_IRGRP',
+        # 'S_IWGRP',
+        # 'S_IXGRP',
+        # 'S_IRWXO',
+        'S_IROTH',
+        # 'S_IWOTH',
+        # 'S_IXOTH',
+    )
+
+
+def _chmod_get_mode(node):
+    """
+    Extract the mode constant of a node.
+
+    Args:
+        node (astroid.node_classes.NodeNG): an AST node
+    """
+    if isinstance(node, astroid.Name):
+        return [node.name]
+    if isinstance(node, astroid.Attribute) and isinstance(node.expr, astroid.Name) and node.expr.name == 'stat':
+        return [node.attrname]
+    if isinstance(node, astroid.BinOp):
+        return _chmod_get_mode(node.left) + _chmod_get_mode(node.right)
+    return []
+
+
+def _chmod_has_wx_for_go(node):
+    if platform.system() == 'Windows':
+        return False
+
+    modes = None
+    if len(node.args) > 1:
+        modes = _chmod_get_mode(node.args[1])
+    elif node.keywords:
+        for keyword in node.keywords:
+            if keyword.arg == 'mode':
+                modes = _chmod_get_mode(keyword.value)
+                break
+
+    if modes is None:
+        # NB: this would be from invalid code such as `os.chmod("file.txt")`
+        raise RuntimeError('Unable to extract `mode` argument from function call!')
+    return any(not _chmod_is_allowed_mode(mode) for mode in modes)
+
+
+# ==============================================================================
+
+
 class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-instance-attributes
     """Plugin class."""
 
@@ -429,6 +497,11 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
             'os-mknod-unsafe-permissions',
             'Avoid using `os.mknod` with unsafe file permissions (by default 0 <= mode <= 0o755)',
         ),
+        'W8019': (
+            'Avoid using `os.chmod` with unsafe permissions (W ^ X for group and others)',
+            'os-chmod-unsafe-permissions',
+            'Avoid using `os.chmod` with unsafe file permissions (W ^ X for group and others)',
+        ),
     }
 
     def __init__(self, linter):
@@ -479,6 +552,8 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
             self.add_message('avoid-marshal-load', node=node)
         elif _is_function_call(node, module='shelve', function='open'):
             self.add_message('avoid-shelve-open', node=node)
+        elif _is_function_call(node, module='os', function='chmod') and _chmod_has_wx_for_go(node):
+            self.add_message('os-chmod-unsafe-permissions', node=node)
         elif _is_unix():
             if (
                 _is_function_call(node, module='os', function=('mkdir', 'makedirs'))
