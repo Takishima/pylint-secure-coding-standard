@@ -612,8 +612,11 @@ class SecureCodingStandardChecker(BaseChecker):
         modes = _read_octal_mode_option(config_name, value, list(range(0, self.DEFAULT_MAX_MODE + 1)))
 
         if isinstance(modes, int):
-            setattr(self, f'_os_{name}_modes_allowed', list(range(0, modes + 1)))
-            _update_display_msg(suffix=f' (mode <= {value})')
+            if modes > 0:
+                setattr(self, f'_os_{name}_modes_allowed', list(range(0, modes + 1)))
+                _update_display_msg(suffix=f' (mode <= {value})')
+            else:
+                getattr(self, f'_os_{name}_modes_allowed').clear()
         else:
             setattr(self, f'_os_{name}_modes_allowed', modes)
             _update_display_msg(suffix=f' (mode in {modes})')

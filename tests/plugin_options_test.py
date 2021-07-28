@@ -86,6 +86,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         (
             ('n', []),
             ('y', _default_modes),
+            ('0', []),
             ('0o755', _default_modes),
             ('0o644, 0o755,', [0o644, 0o755]),
         ),
