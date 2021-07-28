@@ -37,28 +37,45 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     CHECKER_CLASS = pylint_scs.SecureCodingStandardChecker
 
     @pytest.mark.parametrize(
+        'arg, expected',
+        (
+            ('0', 0),
+            ('false', None),
+            ('False', None),
+            ('n', None),
+            ('no', None),
+            ('No', None),
+            ('NO', None),
+            ('y', _default_modes),
+            ('yes', _default_modes),
+            ('Yes', _default_modes),
+            ('YES', _default_modes),
+            ('true', _default_modes),
+            ('True', _default_modes),
+            ('1', 1),
+            ('493', 493),
+            ('0o755', 0o755),
+            ('0o755,', [0o755]),
+            ('0o644, 0o755,', [0o644, 0o755]),
+        ),
+        ids=_id_func,
+    )
+    def test_read_octal_mode_option(self, arg, expected):
+        print(f'INFO: expected: {expected}')
+        assert pylint_scs._read_octal_mode_option('test', arg, _default_modes) == expected
+
+    @pytest.mark.parametrize('arg', ('', ',', ',,', 'nope', 'asd', 'a,', '493, a'))
+    def test_read_octal_mode_option_invalid(self, arg):
+        with pytest.raises(ValueError):
+            pylint_scs._read_octal_mode_option('test', arg, _default_modes)
+
+    @pytest.mark.parametrize(
         'arg, prefer_os_open, allowed_modes',
         (
             ('0', False, []),
-            ('false', False, []),
-            ('False', False, []),
-            ('n', False, []),
-            ('no', False, []),
-            ('No', False, []),
-            ('NO', False, []),
             ('y', True, _default_modes),
-            ('yes', True, _default_modes),
-            ('Yes', True, _default_modes),
-            ('YES', True, _default_modes),
-            ('true', True, _default_modes),
-            ('True', True, _default_modes),
-            ('1', True, [0, 1]),
-            ('2', True, [0, 1, 2]),
             ('0o755', True, _default_modes),
-            ('0o755,', True, [0o755]),
             ('0o644, 0o755,', True, [0o644, 0o755]),
-            ('493', True, _default_modes),
-            ('0o644', True, list(range(0, 0o644 + 1))),
         ),
         ids=_id_func,
     )
@@ -68,7 +85,19 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         assert self.checker._prefer_os_open == prefer_os_open
         assert self.checker._os_open_modes_allowed == allowed_modes
 
-    @pytest.mark.parametrize('arg', ('', ',', ',,', 'asd', 'a,', '493, a'))
-    def test_os_open_mode_option_invalid(self, arg):
-        with pytest.raises(ValueError):
-            self.checker.set_os_open_mode(arg)
+    @pytest.mark.parametrize('function', ('mkdir', 'mkfifo', 'mknod'))
+    @pytest.mark.parametrize(
+        'arg, allowed_modes',
+        (
+            ('n', []),
+            ('y', _default_modes),
+            ('0', []),
+            ('0o755', _default_modes),
+            ('0o644, 0o755,', [0o644, 0o755]),
+        ),
+        ids=_id_func,
+    )
+    def test_os_allowed_mode(self, function, arg, allowed_modes):
+        print(f'INFO: allowed_modes: {allowed_modes}')
+        getattr(self.checker, f'set_os_{function}_allowed_modes')(arg)
+        assert getattr(self.checker, f'_os_{function}_modes_allowed') == allowed_modes

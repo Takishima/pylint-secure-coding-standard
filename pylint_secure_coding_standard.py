@@ -32,6 +32,68 @@ def _is_posix():
     return platform.system() in ('Linux', 'Darwin')
 
 
+_is_unix = _is_posix
+
+# ==============================================================================
+
+
+def _read_octal_mode_option(name, value, default):
+    """
+    Read an integer or list of integer configuration option.
+
+    Args:
+        name (str): Name of option
+        value (str): Value of option from the configuration file or on the CLI. Its value can be any of:
+            - 'yes', 'y', 'true' (case-insensitive)
+                The maximum mode value is then set to self.DEFAULT_MAX_MODE
+            - a single octal or decimal integer
+                The maximum mode value is then set to that integer value
+            - a comma-separated list of integers (octal or decimal)
+                The allowed mode values are then those found in the list
+            - anything else will count as a falseful value
+        default (int,list): Default value for option if set to one of
+            ('y', 'yes', 'true') in the configuration file or on the CLI
+
+    Returns:
+        A single integer or a (possibly empty) list of integers
+
+    Raises:
+        ValueError: if the value of the option is not valid
+    """
+
+    def _str_to_int(arg):
+        try:
+            return int(arg, 8)
+        except ValueError:
+            return int(arg)
+
+    value = value.lower()
+    modes = [mode.strip() for mode in value.split(',')]
+
+    if len(modes) > 1:
+        # Lists of allowed modes
+        try:
+            allowed_modes = [_str_to_int(mode) for mode in modes if mode]
+        except ValueError as error:
+            raise ValueError(f'Unable to convert {modes} elements to integers!') from error
+        else:
+            if not allowed_modes:
+                raise ValueError(f'Calculated empty value for `{name}`!')
+            return allowed_modes
+    elif modes and modes[0]:
+        # Single values (ie. max allowed value for mode)
+        try:
+            return _str_to_int(value)
+        except ValueError as error:
+            if value in ('y', 'yes', 'true'):
+                return default
+            if value in ('n', 'no', 'false'):
+                return None
+            raise ValueError(f'Invalid value for `{name}`: {value}!') from error
+    else:
+        raise ValueError(f'Invalid value for `{name}`: {value}!')
+
+
 # ==============================================================================
 
 
@@ -89,6 +151,22 @@ def _is_builtin_open_for_writing(node):
             #  * open(..., "x")
             return True
     return False
+
+
+def _is_allowed_mode(node, allowed_modes):
+    mode = None
+    if len(node.args) > 1 and isinstance(node.args[1], astroid.Const):
+        mode = node.args[1].value
+    elif node.keywords:
+        for keyword in node.keywords:
+            if keyword.arg == 'mode' and isinstance(keyword.value, astroid.Const):
+                mode = keyword.value.value
+                break
+    if mode is not None:
+        return mode in allowed_modes
+
+    # NB: default to True in all other cases
+    return True
 
 
 def _is_os_open_allowed_mode(node, allowed_modes):
@@ -230,6 +308,9 @@ class SecureCodingStandardChecker(BaseChecker):
 
     DEFAULT_MAX_MODE = 0o755
     W8012_DISPLAY_MSG = 'Avoid using `os.open` with unsafe permissions permissions'
+    W8016_DISPLAY_MSG = 'Avoid using `os.mkdir` and `os.makedirs` with unsafe permissions permissions'
+    W8017_DISPLAY_MSG = 'Avoid using `os.mkfifo` with unsafe permissions permissions'
+    W8018_DISPLAY_MSG = 'Avoid using `os.mknod` with unsafe permissions permissions'
 
     __implements__ = (IAstroidChecker,)
 
@@ -238,11 +319,38 @@ class SecureCodingStandardChecker(BaseChecker):
         (
             'os-open-mode',
             {
-                'default': False,
+                'default': '0',
                 'type': 'string',
                 'metavar': '<os-open-mode>',
                 'help': 'Integer or comma-separated list of integers (octal or decimal) of allowed modes. If set to a '
                 'truthful value (ie. >0 or non-empty list), this checker will prefer `os.open` over the builtin `open`',
+            },
+        ),
+        (
+            'os-mkdir-mode',
+            {
+                'default': '0',
+                'type': 'string',
+                'metavar': '<os-mkdir-mode>',
+                'help': 'Integer or comma-separated list of integers (octal or decimal) of allowed modes.',
+            },
+        ),
+        (
+            'os-mkfifo-mode',
+            {
+                'default': '0',
+                'type': 'string',
+                'metavar': '<os-mkfifo-mode>',
+                'help': 'Integer or comma-separated list of integers (octal or decimal) of allowed modes.',
+            },
+        ),
+        (
+            'os-mknod-mode',
+            {
+                'default': '0',
+                'type': 'string',
+                'metavar': '<os-mknod-mode>',
+                'help': 'Integer or comma-separated list of integers (octal or decimal) of allowed modes.',
             },
         ),
     )
@@ -331,6 +439,21 @@ class SecureCodingStandardChecker(BaseChecker):
             'avoid-shelve-open',
             'Use of `shelve.open()` should be avoided in favour of safer file formats',
         ),
+        'W8016': (
+            W8016_DISPLAY_MSG,
+            'os-mkdir-unsafe-permissions',
+            'Avoid using `os.mkdir` and `os.makedirs` with unsafe file permissions (by default 0 <= mode <= 0o755)',
+        ),
+        'W8017': (
+            W8017_DISPLAY_MSG,
+            'os-mkfifo-unsafe-permissions',
+            'Avoid using `os.mkfifo` with unsafe file permissions (by default 0 <= mode <= 0o755)',
+        ),
+        'W8018': (
+            W8018_DISPLAY_MSG,
+            'os-mknod-unsafe-permissions',
+            'Avoid using `os.mknod` with unsafe file permissions (by default 0 <= mode <= 0o755)',
+        ),
     }
 
     def __init__(self, *args, **kwargs):
@@ -338,6 +461,9 @@ class SecureCodingStandardChecker(BaseChecker):
         super().__init__(*args, **kwargs)
         self._prefer_os_open = False
         self._os_open_modes_allowed = []
+        self._os_mkdir_modes_allowed = []
+        self._os_mkfifo_modes_allowed = []
+        self._os_mknod_modes_allowed = []
 
     def visit_call(self, node):  # pylint: disable=too-many-branches
         """Visitor method called for astroid.Call nodes."""
@@ -375,6 +501,25 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('avoid-marshal-load', node=node)
         elif _is_function_call(node, module='shelve', function='open'):
             self.add_message('avoid-shelve-open', node=node)
+        elif _is_unix():
+            if (
+                _is_function_call(node, module='os', function=('mkdir', 'makedirs'))
+                and self._os_mkdir_modes_allowed
+                and not _is_allowed_mode(node, self._os_mkdir_modes_allowed)
+            ):
+                self.add_message('os-mkdir-unsafe-permissions', node=node)
+            elif (
+                _is_function_call(node, module='os', function='mkfifo')
+                and self._os_mkfifo_modes_allowed
+                and not _is_allowed_mode(node, self._os_mkfifo_modes_allowed)
+            ):
+                self.add_message('os-mkfifo-unsafe-permissions', node=node)
+            elif (
+                _is_function_call(node, module='os', function='mknod')
+                and self._os_mknod_modes_allowed
+                and not _is_allowed_mode(node, self._os_mknod_modes_allowed)
+            ):
+                self.add_message('os-mknod-unsafe-permissions', node=node)
 
     def visit_import(self, node):
         """Visitor method called for astroid.Import nodes."""
@@ -429,65 +574,90 @@ class SecureCodingStandardChecker(BaseChecker):
         """Visitor method called for astroid.Assert nodes."""
         self.add_message('avoid-assert', node=node)
 
-    def set_os_open_mode(self, arg):
+    def set_os_open_mode(self, value):
         """
         Control whether we prefer `os.open` over the builtin `open`.
 
         Args:
-            arg (str): String with with mode value. Can be either of:
-                - 'yes', 'y', 'true' (case-insensitive)
-                    The maximum mode value is then set to self.DEFAULT_MAX_MODE
-                - a single octal or decimal integer
-                    The maximum mode value is then set to that integer value
-                - a comma-separated list of integers (octal or decimal)
-                    The allowed mode values are then those found in the list
-                - anything else will disable the feature
+            value (str): Option value
         """
-
-        def _str_to_int(arg):
-            try:
-                return int(arg, 8)
-            except ValueError:
-                return int(arg)
 
         def _update_display_msg(suffix=''):
             self.msg['W8012'] = (self.W8012_DISPLAY_MSG + suffix, self.msg['W8012'][1], self.msg['W8012'][2])
 
-        arg = arg.lower()
-        modes = [mode.strip() for mode in arg.split(',')]
+        modes = _read_octal_mode_option('os_open_mode', value, list(range(0, self.DEFAULT_MAX_MODE + 1)))
 
-        if len(modes) > 1:
-            # Lists of allowed modes
-            try:
-                self._os_open_modes_allowed = [_str_to_int(mode) for mode in modes if mode]
-                if not self._os_open_modes_allowed:
-                    raise ValueError('Calculated empty value for `os_open_mode`!')
-                self._prefer_os_open = True
-                _update_display_msg(suffix=f' (mode in {modes})')
-            except ValueError as error:
-                raise ValueError(f'Unable to convert {modes} elements to integers!') from error
-        elif modes and modes[0]:
-            # Single values (ie. max allowed value for mode)
-            try:
-                val = _str_to_int(arg)
-                self._prefer_os_open = val > 0
-                if self._prefer_os_open:
-                    self._os_open_modes_allowed = list(range(0, val + 1))
-                    _update_display_msg(suffix=f' (mode <= {arg})')
-                else:
-                    self._os_open_modes_allowed.clear()
-            except ValueError as error:
-                if arg in ('y', 'yes', 'true'):
-                    self._prefer_os_open = True
-                    self._os_open_modes_allowed = list(range(0, self.DEFAULT_MAX_MODE + 1))
-                    _update_display_msg(suffix=f' (mode <= {oct(self.DEFAULT_MAX_MODE)})')
-                elif arg in ('n', 'no', 'false'):
-                    self._prefer_os_open = False
-                    self._os_open_modes_allowed.clear()
-                else:
-                    raise ValueError(f'Invalid value for `os_open_mode`: {arg}!') from error
+        self._os_open_modes_allowed.clear()
+
+        if isinstance(modes, int):
+            self._prefer_os_open = modes > 0
+            if self._prefer_os_open:
+                self._os_open_modes_allowed = list(range(0, modes + 1))
+                _update_display_msg(suffix=f' (mode <= {value})')
+        elif not modes:
+            self._prefer_os_open = False
         else:
-            raise ValueError(f'Invalid value for `os_open_mode`: {arg}!')
+            self._prefer_os_open = True
+            self._os_open_modes_allowed = modes
+            _update_display_msg(suffix=f' (mode in {modes})')
+
+    def _set_mode_option(self, config_name, name, value, warning_id):
+        def _update_display_msg(suffix=''):
+            self.msg[warning_id] = (
+                getattr(self, f'{warning_id}_DISPLAY_MSG') + suffix,
+                self.msg[warning_id][1],
+                self.msg[warning_id][2],
+            )
+
+        modes = _read_octal_mode_option(config_name, value, list(range(0, self.DEFAULT_MAX_MODE + 1)))
+
+        if isinstance(modes, int):
+            if modes > 0:
+                setattr(self, f'_os_{name}_modes_allowed', list(range(0, modes + 1)))
+                _update_display_msg(suffix=f' (mode <= {value})')
+            else:
+                getattr(self, f'_os_{name}_modes_allowed').clear()
+        elif modes:
+            setattr(self, f'_os_{name}_modes_allowed', modes)
+            _update_display_msg(suffix=f' (mode in {modes})')
+        else:
+            getattr(self, f'_os_{name}_modes_allowed').clear()
+
+    def set_os_mkdir_allowed_modes(self, value):
+        """
+        Set the allowed modes for `os.mkdir` and `os.makedirs`.
+
+        Note:
+            This option has no effect on non-UNIX platforms.
+
+        Args:
+            value (str): Option value
+        """
+        self._set_mode_option('os_mkdir_mode', 'mkdir', value, 'W8016')
+
+    def set_os_mkfifo_allowed_modes(self, value):
+        """
+        Set the allowed modes for `os.mkfifo`.
+
+        Note:
+            This option has no effect on non-UNIX platforms.
+
+        Args:
+            value (str): Option value
+        """
+        self._set_mode_option('os_mkfifo_mode', 'mkfifo', value, 'W8017')
+
+    def set_os_mknod_allowed_modes(self, value):
+        """
+        Set the allowed modes for `os.mknod`.
+
+        Note:
+            This option has no effect on non-UNIX platforms.
+
+        Args:
+            value (str): Option value
+        """
+        self._set_mode_option('os_mknod_mode', 'mknod', value, 'W8018')
 
 
 def register(linter):  # pragma: no cover
@@ -500,4 +670,7 @@ def load_configuration(linter):  # pragma: no cover
     for checker in linter.get_checkers():
         if isinstance(checker, SecureCodingStandardChecker):
             checker.set_os_open_mode(checker.config.os_open_mode)
+            checker.set_os_open_mode(checker.config.os_mkdir_mode)
+            checker.set_os_open_mode(checker.config.os_mkfifo_mode)
+            checker.set_os_open_mode(checker.config.os_mknod_mode)
             break

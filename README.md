@@ -29,25 +29,51 @@ pylint plugin that enforces some secure coding standards.
 | E8013 | Avoid using `pickle.load()` and `pickle.loads()`                                                             |
 | E8014 | Avoid using `marshal.load()` and `marshal.loads()`                                                           |
 | E8015 | Avoid using `shelve.open()`                                                                                  |
+| E8016 | Avoid using `os.mkdir` and `os.makedirs` with unsafe file permissions                                        |
+| E8017 | Avoid using `os.mkfifo` with unsafe file permissions                                                         |
+| E8018 | Avoid using `os.mknod` with unsafe file permissions                                                          |
 
 
 ## Plugin configuration options
 
-### File permissions when using `os.open`
+This plugin supports some configuration options that may either be specified directly on the command line with a flag
+using the option name as `--name` or by specifying them in one of pylint's configuration files (ie. `pyproject.toml`,
+`pylintrc`, etc.).
 
-Since version 1.3.0 you can control whether this plugin favors `os.open` over the builtin `open` function when opening files.
+Available options:
 
+| Option name    | Option type | Default value | Related error code |
+|----------------|-------------|---------------|--------------------|
+| os-open-mode   | mode-like   | 0 (off)       | W8012              |
+| os-mkdir-mode  | mode-like   | 0 (off)       | E8016              |
+| os-mkfifo-mode | mode-like   | 0 (off)       | E8017              |
+| os-mknod-mode  | mode-like   | 0 (off)       | E8018              |
+
+
+### Mode-like options
+
+Mode-like options are configuration options for errors/warnings that relate to some function that accepts a `mode`
+parameter (or similar) that control some file or directory permissions. For those kind of options, the plugin
+understands a variety of values that must be specified as `string`. They will then be parsed into a list of allowed mode
+values:
+
+- Any positive, non-zero (octal or decimal) integer value specifies the maximum value for the mode value
+- A comma-separated list of (octal or decimal) integers indicates the list of allowed mode values
+- 'y', 'yes', 'true' (case-insensitive) will turn on the warnings using the default value of `0o755`
+- 'n', 'no', 'false' (case-insensitive) will turn off the warnings
+
+Example of values:
 ```toml
     [tool.pylint.plugins]
     os-open-mode = '0'            # check disabled
-    os-open-mode = '0o000'        # check disabled
-    os-open-mode = '493'          # all modes from 0 to 0o755
+    os-open-mode = 'no'           # check disabled
+    os-open-mode = '493'          # all modes from 0 to 493 (=0o755)
     os-open-mode = '0o755'        # all modes from 0 to 0o755
-    os-open-mode = '0o755,'       # only 0o755
+    os-open-mode = '0o755,'       # only 0o755 (notice the comma)
     os-open-mode = '0o644,0o755'  # only 0o644 and 0o755
 ```
 
-You can also specify this option directly on the command line:
+You can also specify those options directly on the command line:
 
 ```sh
 python3 -m pylint --load-plugins=pylint_secure_coding_standard --os-open-mode='0o755'
