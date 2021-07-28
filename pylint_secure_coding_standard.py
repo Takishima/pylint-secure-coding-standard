@@ -282,33 +282,20 @@ def _is_yaml_unsafe_call(node):
 # ==============================================================================
 
 
-def _chmod_is_allowed_mode(value):
+def _chmod_is_wx_for_go(value):
     """
-    Test whether a single mode value is valid.
+    Test whether a single mode value is has W or X for group or others.
 
     Args:
         value (str): Mode value
     """
     return value in (
-        'S_ISUID',
-        'S_ISGID',
-        'S_ENFMT',
-        'S_ISVTX',
-        'S_IREAD',
-        'S_IWRITE',
-        'S_IEXEC',
-        'S_IRWXU',
-        'S_IRUSR',
-        'S_IWUSR',
-        'S_IXUSR',
-        # 'S_IRWXG',
-        'S_IRGRP',
-        # 'S_IWGRP',
-        # 'S_IXGRP',
-        # 'S_IRWXO',
-        'S_IROTH',
-        # 'S_IWOTH',
-        # 'S_IXOTH',
+        'S_IRWXG',
+        'S_IWGRP',
+        'S_IXGRP',
+        'S_IRWXO',
+        'S_IWOTH',
+        'S_IXOTH',
     )
 
 
@@ -344,7 +331,7 @@ def _chmod_has_wx_for_go(node):
     if modes is None:
         # NB: this would be from invalid code such as `os.chmod("file.txt")`
         raise RuntimeError('Unable to extract `mode` argument from function call!')
-    return any(not _chmod_is_allowed_mode(mode) for mode in modes)
+    return any(_chmod_is_wx_for_go(mode) for mode in modes)
 
 
 # ==============================================================================
