@@ -89,9 +89,9 @@ def _read_octal_mode_option(name, value, default):
                 return default
             if value in ('n', 'no', 'false'):
                 return None
-            raise ValueError(f'Invalid value for `os_open_mode`: {value}!') from error
+            raise ValueError(f'Invalid value for `{name}`: {value}!') from error
     else:
-        raise ValueError(f'Invalid value for `os_open_mode`: {value}!')
+        raise ValueError(f'Invalid value for `{name}`: {value}!')
 
 
 # ==============================================================================
