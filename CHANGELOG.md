@@ -17,6 +17,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Refactor configuration option parsing for mode-like options
 
+### Fixed
+
+-   Critical typo for `msgs` attribute of the plugin class. This effectively rendered any previous version useless as
+    pylint would not recognize the warning/error messages
+
 ### Repository
 
 -   Restrict running some GitHub actions when a pull request is merged

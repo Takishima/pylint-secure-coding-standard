@@ -113,10 +113,15 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         mocker.patch('platform.system', lambda: platform)
         getattr(self.checker, f'set_os_{function}_allowed_modes')(str(option))
 
+        print(s + ' #@')
         node = astroid.extract_node(s + ' #@')
         if enabled_platform and option:
             with self.assertAddsMessages(
-                pylint.testutils.Message(msg_id=f'os-{function}-unsafe-permissions', node=node)
+                pylint.testutils.Message(
+                    msg_id=f'os-{function}-unsafe-permissions',
+                    node=node,
+                    args=(getattr(self.checker, f'_os_{function}_msg_arg'),),
+                )
             ):
                 self.checker.visit_call(node)
         else:

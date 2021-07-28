@@ -41,8 +41,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         with_nodes = nodes[5:]
 
         with self.assertNoMessages():
-            self.checker.set_os_open_mode('True')
-            assert self.checker._prefer_os_open
+            self.checker.set_os_open_allowed_modes('True')
             for idx, node in enumerate(call_nodes):
                 self.checker.visit_call(node)
             for idx, node in enumerate(with_nodes):
@@ -75,8 +74,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     @pytest.mark.parametrize('os_open_mode', (False, True))
     def test_builtin_open_call(self, s, os_open_mode):
         node = astroid.extract_node(s + ' #@')
-        self.checker.set_os_open_mode(str(os_open_mode))
-        assert self.checker._prefer_os_open == os_open_mode
+        self.checker.set_os_open_allowed_modes(str(os_open_mode))
         if os_open_mode:
             with self.assertAddsMessages(pylint.testutils.Message(msg_id='replace-builtin-open', node=node)):
                 self.checker.visit_call(node)
@@ -88,8 +86,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     @pytest.mark.parametrize('os_open_mode', (False, True))
     def test_builtin_open_with(self, s, os_open_mode):
         node = astroid.extract_node(s + ' #@')
-        self.checker.set_os_open_mode(str(os_open_mode))
-        assert self.checker._prefer_os_open == os_open_mode
+        self.checker.set_os_open_allowed_modes(str(os_open_mode))
         if os_open_mode:
             with self.assertAddsMessages(pylint.testutils.Message(msg_id='replace-builtin-open', node=node)):
                 self.checker.visit_with(node)

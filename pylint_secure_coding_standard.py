@@ -153,42 +153,21 @@ def _is_builtin_open_for_writing(node):
     return False
 
 
-def _is_allowed_mode(node, allowed_modes):
+def _get_mode_arg(node, args_idx):
     mode = None
-    if len(node.args) > 1 and isinstance(node.args[1], astroid.Const):
-        mode = node.args[1].value
+    if len(node.args) > args_idx and isinstance(node.args[args_idx], astroid.Const):
+        mode = node.args[args_idx].value
     elif node.keywords:
         for keyword in node.keywords:
             if keyword.arg == 'mode' and isinstance(keyword.value, astroid.Const):
                 mode = keyword.value.value
                 break
+    return mode
+
+
+def _is_allowed_mode(node, allowed_modes, args_idx):
+    mode = _get_mode_arg(node, args_idx=args_idx)
     if mode is not None:
-        return mode in allowed_modes
-
-    # NB: default to True in all other cases
-    return True
-
-
-def _is_os_open_allowed_mode(node, allowed_modes):
-    mode = None
-    flags = None  # pylint: disable=unused-variable
-    if len(node.args) > 1 and isinstance(node.args[1], (astroid.Attribute, astroid.BinOp)):
-        # Cover:
-        #  * os.open(xxx, os.O_WRONLY)
-        #  * os.open(xxx, os.O_WRONLY | os.O_CREATE)
-        #  * os.open(xxx, os.O_WRONLY | os.O_CREATE | os.O_FSYNC)
-        flags = node.args[1]
-    if len(node.args) > 2 and isinstance(node.args[2], astroid.Const):
-        mode = node.args[2].value
-    elif node.keywords:
-        for keyword in node.keywords:
-            if keyword.arg == 'flags' and isinstance(keyword.value, (astroid.Attribute, astroid.BinOp)):
-                flags = keyword.value  # pylint: disable=unused-variable # noqa: F841
-            if keyword.arg == 'mode' and isinstance(keyword.value, astroid.Const):
-                mode = keyword.value.value
-                break
-    if mode is not None:
-        # TODO: condition check on the flags value if present (ie. ignore if read-only)
         return mode in allowed_modes
 
     # NB: default to True in all other cases
@@ -303,14 +282,10 @@ def _is_yaml_unsafe_call(node):
 # ==============================================================================
 
 
-class SecureCodingStandardChecker(BaseChecker):
+class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-instance-attributes
     """Plugin class."""
 
     DEFAULT_MAX_MODE = 0o755
-    W8012_DISPLAY_MSG = 'Avoid using `os.open` with unsafe permissions'
-    W8016_DISPLAY_MSG = 'Avoid using `os.mkdir` and `os.makedirs` with unsafe permissions'
-    W8017_DISPLAY_MSG = 'Avoid using `os.mkfifo` with unsafe permissions'
-    W8018_DISPLAY_MSG = 'Avoid using `os.mknod` with unsafe permissions'
 
     __implements__ = (IAstroidChecker,)
 
@@ -420,7 +395,7 @@ class SecureCodingStandardChecker(BaseChecker):
             'Use of `shlex.quote()` should be avoided on non-POSIX platforms (such as Windows)',
         ),
         'W8012': (
-            W8012_DISPLAY_MSG,
+            'Avoid using `os.open` with unsafe permissions (should be %s)',
             'os-open-unsafe-permissions',
             'Avoid using `os.open` with unsafe file permissions (by default 0 <= mode <= 0o755)',
         ),
@@ -440,29 +415,32 @@ class SecureCodingStandardChecker(BaseChecker):
             'Use of `shelve.open()` should be avoided in favour of safer file formats',
         ),
         'W8016': (
-            W8016_DISPLAY_MSG,
+            'Avoid using `os.mkdir` and `os.makedirs` with unsafe permissions (should be %s)',
             'os-mkdir-unsafe-permissions',
             'Avoid using `os.mkdir` and `os.makedirs` with unsafe file permissions (by default 0 <= mode <= 0o755)',
         ),
         'W8017': (
-            W8017_DISPLAY_MSG,
+            'Avoid using `os.mkfifo` with unsafe permissions (should be %s)',
             'os-mkfifo-unsafe-permissions',
             'Avoid using `os.mkfifo` with unsafe file permissions (by default 0 <= mode <= 0o755)',
         ),
         'W8018': (
-            W8018_DISPLAY_MSG,
+            'Avoid using `os.mknod` with unsafe permissions (should be %s)',
             'os-mknod-unsafe-permissions',
             'Avoid using `os.mknod` with unsafe file permissions (by default 0 <= mode <= 0o755)',
         ),
     }
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, linter):
         """Initialize a SecureCodingStandardChecker object."""
-        super().__init__(*args, **kwargs)
-        self._prefer_os_open = False
+        super().__init__(linter)
+        self._os_open_msg_arg = ''
         self._os_open_modes_allowed = []
+        self._os_mkdir_msg_arg = ''
         self._os_mkdir_modes_allowed = []
+        self._os_mkfifo_msg_arg = ''
         self._os_mkfifo_modes_allowed = []
+        self._os_mknod_msg_arg = ''
         self._os_mknod_modes_allowed = []
 
     def visit_call(self, node):  # pylint: disable=too-many-branches
@@ -483,7 +461,7 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('avoid-shell-true', node=node)
         elif _is_function_call(node, module='os', function='popen'):
             self.add_message('avoid-os-popen', node=node)
-        elif _is_builtin_open_for_writing(node) and self._prefer_os_open:
+        elif _is_builtin_open_for_writing(node) and self._os_open_modes_allowed:
             self.add_message('replace-builtin-open', node=node)
         elif isinstance(node.func, astroid.Name) and (node.func.name in ('eval', 'exec')):
             self.add_message('avoid-eval-exec', node=node)
@@ -491,10 +469,10 @@ class SecureCodingStandardChecker(BaseChecker):
             self.add_message('avoid-shlex-quote-on-non-posix', node=node)
         elif (
             _is_function_call(node, module='os', function='open')
-            and self._prefer_os_open
-            and not _is_os_open_allowed_mode(node, self._os_open_modes_allowed)
+            and self._os_open_modes_allowed
+            and not _is_allowed_mode(node, self._os_open_modes_allowed, args_idx=2)
         ):
-            self.add_message('os-open-unsafe-permissions', node=node)
+            self.add_message('os-open-unsafe-permissions', node=node, args=(self._os_open_msg_arg,))
         elif _is_function_call(node, module='pickle', function=('load', 'loads')):
             self.add_message('avoid-pickle-load', node=node)
         elif _is_function_call(node, module='marshal', function=('load', 'loads')):
@@ -505,21 +483,21 @@ class SecureCodingStandardChecker(BaseChecker):
             if (
                 _is_function_call(node, module='os', function=('mkdir', 'makedirs'))
                 and self._os_mkdir_modes_allowed
-                and not _is_allowed_mode(node, self._os_mkdir_modes_allowed)
+                and not _is_allowed_mode(node, self._os_mkdir_modes_allowed, args_idx=1)
             ):
-                self.add_message('os-mkdir-unsafe-permissions', node=node)
+                self.add_message('os-mkdir-unsafe-permissions', node=node, args=(self._os_mkdir_msg_arg,))
             elif (
                 _is_function_call(node, module='os', function='mkfifo')
                 and self._os_mkfifo_modes_allowed
-                and not _is_allowed_mode(node, self._os_mkfifo_modes_allowed)
+                and not _is_allowed_mode(node, self._os_mkfifo_modes_allowed, args_idx=1)
             ):
-                self.add_message('os-mkfifo-unsafe-permissions', node=node)
+                self.add_message('os-mkfifo-unsafe-permissions', node=node, args=(self._os_mkfifo_msg_arg,))
             elif (
                 _is_function_call(node, module='os', function='mknod')
                 and self._os_mknod_modes_allowed
-                and not _is_allowed_mode(node, self._os_mknod_modes_allowed)
+                and not _is_allowed_mode(node, self._os_mknod_modes_allowed, args_idx=1)
             ):
-                self.add_message('os-mknod-unsafe-permissions', node=node)
+                self.add_message('os-mknod-unsafe-permissions', node=node, args=(self._os_mknod_msg_arg,))
 
     def visit_import(self, node):
         """Visitor method called for astroid.Import nodes."""
@@ -560,11 +538,11 @@ class SecureCodingStandardChecker(BaseChecker):
         """Visitor method called for astroid.With nodes."""
         for item in node.items:
             if item and isinstance(item[0], astroid.Call):
-                if self._prefer_os_open:
+                if self._os_open_modes_allowed:
                     if _is_builtin_open_for_writing(item[0]):
                         self.add_message('replace-builtin-open', node=node)
-                    elif _is_function_call(item[0], module='os', function='open') and not _is_os_open_allowed_mode(
-                        item[0], self._os_open_modes_allowed
+                    elif _is_function_call(item[0], module='os', function='open') and not _is_allowed_mode(
+                        item[0], self._os_open_modes_allowed, args_idx=2
                     ):
                         self.add_message('os-open-unsafe-permissions', node=node)
                 elif _is_function_call(item[0], module='shelve', function='open'):
@@ -574,54 +552,29 @@ class SecureCodingStandardChecker(BaseChecker):
         """Visitor method called for astroid.Assert nodes."""
         self.add_message('avoid-assert', node=node)
 
-    def set_os_open_mode(self, value):
+    def _set_mode_option(self, config_name, name, value):
+        modes = _read_octal_mode_option(config_name, value, self.DEFAULT_MAX_MODE)
+
+        if isinstance(modes, int) and modes > 0:
+            setattr(self, f'_os_{name}_modes_allowed', list(range(0, modes + 1)))
+            setattr(self, f'_os_{name}_msg_arg', f'0 < mode < {oct(modes)}')
+        elif modes:
+            setattr(self, f'_os_{name}_modes_allowed', modes)
+            setattr(self, f'_os_{name}_msg_arg', f'mode in {[oct(mode) for mode in modes]}')
+        else:
+            getattr(self, f'_os_{name}_modes_allowed').clear()
+
+    def set_os_open_allowed_modes(self, value):
         """
-        Control whether we prefer `os.open` over the builtin `open`.
+        Set the allowed modes for `os.open`.
+
+        Note:
+            This option has no effect on non-POSIX platforms.
 
         Args:
             value (str): Option value
         """
-
-        def _update_display_msg(suffix=''):
-            self.msg['W8012'] = (self.W8012_DISPLAY_MSG + suffix, self.msg['W8012'][1], self.msg['W8012'][2])
-
-        modes = _read_octal_mode_option('os_open_mode', value, list(range(0, self.DEFAULT_MAX_MODE + 1)))
-
-        self._os_open_modes_allowed.clear()
-
-        if isinstance(modes, int):
-            self._prefer_os_open = modes > 0
-            if self._prefer_os_open:
-                self._os_open_modes_allowed = list(range(0, modes + 1))
-                _update_display_msg(suffix=f' (mode <= {value})')
-        elif not modes:
-            self._prefer_os_open = False
-        else:
-            self._prefer_os_open = True
-            self._os_open_modes_allowed = modes
-            _update_display_msg(suffix=f' (mode in {modes})')
-
-    def _set_mode_option(self, config_name, name, value, warning_id):
-        def _update_display_msg(suffix=''):
-            self.msg[warning_id] = (
-                getattr(self, f'{warning_id}_DISPLAY_MSG') + suffix,
-                self.msg[warning_id][1],
-                self.msg[warning_id][2],
-            )
-
-        modes = _read_octal_mode_option(config_name, value, list(range(0, self.DEFAULT_MAX_MODE + 1)))
-
-        if isinstance(modes, int):
-            if modes > 0:
-                setattr(self, f'_os_{name}_modes_allowed', list(range(0, modes + 1)))
-                _update_display_msg(suffix=f' (mode <= {value})')
-            else:
-                getattr(self, f'_os_{name}_modes_allowed').clear()
-        elif modes:
-            setattr(self, f'_os_{name}_modes_allowed', modes)
-            _update_display_msg(suffix=f' (mode in {modes})')
-        else:
-            getattr(self, f'_os_{name}_modes_allowed').clear()
+        self._set_mode_option('os_open_mode', 'open', value)
 
     def set_os_mkdir_allowed_modes(self, value):
         """
@@ -633,7 +586,7 @@ class SecureCodingStandardChecker(BaseChecker):
         Args:
             value (str): Option value
         """
-        self._set_mode_option('os_mkdir_mode', 'mkdir', value, 'W8016')
+        self._set_mode_option('os_mkdir_mode', 'mkdir', value)
 
     def set_os_mkfifo_allowed_modes(self, value):
         """
@@ -645,7 +598,7 @@ class SecureCodingStandardChecker(BaseChecker):
         Args:
             value (str): Option value
         """
-        self._set_mode_option('os_mkfifo_mode', 'mkfifo', value, 'W8017')
+        self._set_mode_option('os_mkfifo_mode', 'mkfifo', value)
 
     def set_os_mknod_allowed_modes(self, value):
         """
@@ -657,7 +610,7 @@ class SecureCodingStandardChecker(BaseChecker):
         Args:
             value (str): Option value
         """
-        self._set_mode_option('os_mknod_mode', 'mknod', value, 'W8018')
+        self._set_mode_option('os_mknod_mode', 'mknod', value)
 
 
 def register(linter):  # pragma: no cover
@@ -669,8 +622,7 @@ def load_configuration(linter):  # pragma: no cover
     """Load data from the configuration file."""
     for checker in linter.get_checkers():
         if isinstance(checker, SecureCodingStandardChecker):
-            checker.set_os_open_mode(checker.config.os_open_mode)
-            checker.set_os_open_mode(checker.config.os_mkdir_mode)
-            checker.set_os_open_mode(checker.config.os_mkfifo_mode)
-            checker.set_os_open_mode(checker.config.os_mknod_mode)
-            break
+            checker.set_os_open_allowed_modes(checker.config.os_open_mode)
+            checker.set_os_mkdir_allowed_modes(checker.config.os_mkdir_mode)
+            checker.set_os_mkfifo_allowed_modes(checker.config.os_mkfifo_mode)
+            checker.set_os_mknod_allowed_modes(checker.config.os_mknod_mode)
