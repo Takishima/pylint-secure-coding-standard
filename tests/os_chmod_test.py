@@ -55,6 +55,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         's, expected',
         (
             ('-stat.S_IREAD', -stat.S_IREAD),
+            ('~stat.S_IREAD', ~stat.S_IREAD),
             ('not stat.S_IREAD', not stat.S_IREAD),
         ),
     )

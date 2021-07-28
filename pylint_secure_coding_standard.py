@@ -283,7 +283,7 @@ def _is_yaml_unsafe_call(node):
 
 # ==============================================================================
 
-_unop = {'-': operator.neg, 'not': operator.not_}
+_unop = {'-': operator.neg, 'not': operator.not_, '~': operator.inv}
 _binop = {
     '+': operator.add,
     '-': operator.sub,
