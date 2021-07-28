@@ -29,9 +29,9 @@ pylint plugin that enforces some secure coding standards.
 | E8013 | Avoid using `pickle.load()` and `pickle.loads()`                                                             |
 | E8014 | Avoid using `marshal.load()` and `marshal.loads()`                                                           |
 | E8015 | Avoid using `shelve.open()`                                                                                  |
-| E8016 | Avoid using `os.mkdir` and `os.makedirs` with unsafe file permissions                                        |
-| E8017 | Avoid using `os.mkfifo` with unsafe file permissions                                                         |
-| E8018 | Avoid using `os.mknod` with unsafe file permissions                                                          |
+| W8016 | Avoid using `os.mkdir` and `os.makedirs` with unsafe file permissions                                        |
+| W8017 | Avoid using `os.mkfifo` with unsafe file permissions                                                         |
+| W8018 | Avoid using `os.mknod` with unsafe file permissions                                                          |
 
 
 ## Plugin configuration options

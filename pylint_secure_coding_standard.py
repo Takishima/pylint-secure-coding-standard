@@ -307,10 +307,10 @@ class SecureCodingStandardChecker(BaseChecker):
     """Plugin class."""
 
     DEFAULT_MAX_MODE = 0o755
-    W8012_DISPLAY_MSG = 'Avoid using `os.open` with unsafe permissions permissions'
-    W8016_DISPLAY_MSG = 'Avoid using `os.mkdir` and `os.makedirs` with unsafe permissions permissions'
-    W8017_DISPLAY_MSG = 'Avoid using `os.mkfifo` with unsafe permissions permissions'
-    W8018_DISPLAY_MSG = 'Avoid using `os.mknod` with unsafe permissions permissions'
+    W8012_DISPLAY_MSG = 'Avoid using `os.open` with unsafe permissions'
+    W8016_DISPLAY_MSG = 'Avoid using `os.mkdir` and `os.makedirs` with unsafe permissions'
+    W8017_DISPLAY_MSG = 'Avoid using `os.mkfifo` with unsafe permissions'
+    W8018_DISPLAY_MSG = 'Avoid using `os.mknod` with unsafe permissions'
 
     __implements__ = (IAstroidChecker,)
 
