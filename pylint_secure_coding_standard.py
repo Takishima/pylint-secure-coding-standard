@@ -319,7 +319,7 @@ class SecureCodingStandardChecker(BaseChecker):
         (
             'os-open-mode',
             {
-                'default': False,
+                'default': '0',
                 'type': 'string',
                 'metavar': '<os-open-mode>',
                 'help': 'Integer or comma-separated list of integers (octal or decimal) of allowed modes. If set to a '
@@ -329,7 +329,7 @@ class SecureCodingStandardChecker(BaseChecker):
         (
             'os-mkdir-mode',
             {
-                'default': False,
+                'default': '0',
                 'type': 'string',
                 'metavar': '<os-mkdir-mode>',
                 'help': 'Integer or comma-separated list of integers (octal or decimal) of allowed modes.',
@@ -338,7 +338,7 @@ class SecureCodingStandardChecker(BaseChecker):
         (
             'os-mkfifo-mode',
             {
-                'default': False,
+                'default': '0',
                 'type': 'string',
                 'metavar': '<os-mkfifo-mode>',
                 'help': 'Integer or comma-separated list of integers (octal or decimal) of allowed modes.',
@@ -347,7 +347,7 @@ class SecureCodingStandardChecker(BaseChecker):
         (
             'os-mknod-mode',
             {
-                'default': False,
+                'default': '0',
                 'type': 'string',
                 'metavar': '<os-mknod-mode>',
                 'help': 'Integer or comma-separated list of integers (octal or decimal) of allowed modes.',
