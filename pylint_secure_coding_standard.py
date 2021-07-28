@@ -88,7 +88,7 @@ def _read_octal_mode_option(name, value, default):
             if value in ('y', 'yes', 'true'):
                 return default
             if value in ('n', 'no', 'false'):
-                return []
+                return None
             raise ValueError(f'Invalid value for `os_open_mode`: {value}!') from error
     else:
         raise ValueError(f'Invalid value for `os_open_mode`: {value}!')
@@ -617,9 +617,11 @@ class SecureCodingStandardChecker(BaseChecker):
                 _update_display_msg(suffix=f' (mode <= {value})')
             else:
                 getattr(self, f'_os_{name}_modes_allowed').clear()
-        else:
+        elif modes:
             setattr(self, f'_os_{name}_modes_allowed', modes)
             _update_display_msg(suffix=f' (mode in {modes})')
+        else:
+            getattr(self, f'_os_{name}_modes_allowed').clear()
 
     def set_os_mkdir_allowed_modes(self, value):
         """
