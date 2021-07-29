@@ -32,6 +32,7 @@ pylint plugin that enforces some secure coding standards.
 | W8016 | Avoid using `os.mkdir` and `os.makedirs` with unsafe file permissions                                        |
 | W8017 | Avoid using `os.mkfifo` with unsafe file permissions                                                         |
 | W8018 | Avoid using `os.mknod` with unsafe file permissions                                                          |
+| W8019 | Avoid using `os.chmod` with unsafe permissions (W ^ X for group and others)                                  |
 
 
 ## Plugin configuration options

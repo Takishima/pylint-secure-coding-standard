@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Added W8016 to warn when using `os.mkdir` and `os.makedir` with unsafe permissions (UNIX-only)
 -   Added W8017 to warn when using `os.mkfifo` with unsafe permissions (UNIX-only)
 -   Added W8018 to warn when using `os.mknod` with unsafe permissions (UNIX-only)
+-   Added W8019 to warn when using `os.chmod` with unsafe permissions (all except Windows)
 
 ### Updated
 
