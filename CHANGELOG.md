@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Repository
+
+-   Update `thomaseizinger/create-pull-request` GiHub action to v1.2.1
+
 ## [1.4.0] - 2021-07-29
 
 ### Added
