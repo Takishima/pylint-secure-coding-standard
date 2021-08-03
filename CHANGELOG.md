@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
+-   Update `thomaseizinger/create-pull-request` GiHub action to v1.2.1
 -   Update `isort` hook to v5.9.3
 
 ## [1.4.0] - 2021-07-29
