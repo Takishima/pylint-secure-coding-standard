@@ -45,6 +45,12 @@ _os_function_strings = {
 }
 
 
+try:
+    from pylint.testutils import MessageTest
+except ImportError:
+    from pylint.testutils import Message as MessageTest
+
+
 class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     CHECKER_CLASS = pylint_scs.SecureCodingStandardChecker
 
@@ -117,7 +123,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         node = astroid.extract_node(s + ' #@')
         if enabled_platform and option:
             with self.assertAddsMessages(
-                pylint.testutils.Message(
+                MessageTest(
                     msg_id=f'os-{function}-unsafe-permissions',
                     node=node,
                     args=(getattr(self.checker, f'_os_{function}_msg_arg'),),

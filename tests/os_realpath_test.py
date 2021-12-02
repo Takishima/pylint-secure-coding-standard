@@ -19,6 +19,11 @@ import pytest
 
 import pylint_secure_coding_standard as pylint_scs
 
+try:
+    from pylint.testutils import MessageTest
+except ImportError:
+    from pylint.testutils import Message as MessageTest
+
 
 class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     CHECKER_CLASS = pylint_scs.SecureCodingStandardChecker
@@ -49,7 +54,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
     def test_shell_true_importfrom(self, s):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(pylint.testutils.Message(msg_id='replace-os-relpath-abspath', node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id='replace-os-relpath-abspath', node=node)):
             self.checker.visit_importfrom(node)
 
     @pytest.mark.parametrize(
@@ -67,5 +72,5 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
     def test_shell_true_call(self, s):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(pylint.testutils.Message(msg_id='replace-os-relpath-abspath', node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id='replace-os-relpath-abspath', node=node)):
             self.checker.visit_call(node)
