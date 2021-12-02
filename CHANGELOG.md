@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+-   Renamed uses of `pylint.testutils.Message` to `pylint.testutils.MessageTest`
+
 ### Repository
 
 -   Update `thomaseizinger/create-pull-request` GiHub action to v1.3.0

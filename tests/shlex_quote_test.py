@@ -19,6 +19,11 @@ import pytest
 
 import pylint_secure_coding_standard as pylint_scs
 
+try:
+    from pylint.testutils import MessageTest
+except ImportError:
+    from pylint.testutils import Message as MessageTest
+
 
 class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     CHECKER_CLASS = pylint_scs.SecureCodingStandardChecker
@@ -40,7 +45,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         if expected_success:
             self.checker.visit_importfrom(node)
         else:
-            with self.assertAddsMessages(pylint.testutils.Message(msg_id='avoid-shlex-quote-on-non-posix', node=node)):
+            with self.assertAddsMessages(MessageTest(msg_id='avoid-shlex-quote-on-non-posix', node=node)):
                 self.checker.visit_importfrom(node)
 
     @pytest.mark.parametrize(
@@ -66,5 +71,5 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         if expected_success:
             self.checker.visit_call(node)
         else:
-            with self.assertAddsMessages(pylint.testutils.Message(msg_id='avoid-shlex-quote-on-non-posix', node=node)):
+            with self.assertAddsMessages(MessageTest(msg_id='avoid-shlex-quote-on-non-posix', node=node)):
                 self.checker.visit_call(node)

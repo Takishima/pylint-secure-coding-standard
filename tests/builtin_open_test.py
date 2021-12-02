@@ -19,6 +19,11 @@ import pytest
 
 import pylint_secure_coding_standard as pylint_scs
 
+try:
+    from pylint.testutils import MessageTest
+except ImportError:
+    from pylint.testutils import Message as MessageTest
+
 
 class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     CHECKER_CLASS = pylint_scs.SecureCodingStandardChecker
@@ -76,7 +81,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         node = astroid.extract_node(s + ' #@')
         self.checker.set_os_open_allowed_modes(str(os_open_mode))
         if os_open_mode:
-            with self.assertAddsMessages(pylint.testutils.Message(msg_id='replace-builtin-open', node=node)):
+            with self.assertAddsMessages(MessageTest(msg_id='replace-builtin-open', node=node)):
                 self.checker.visit_call(node)
         else:
             with self.assertNoMessages():
@@ -88,7 +93,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         node = astroid.extract_node(s + ' #@')
         self.checker.set_os_open_allowed_modes(str(os_open_mode))
         if os_open_mode:
-            with self.assertAddsMessages(pylint.testutils.Message(msg_id='replace-builtin-open', node=node)):
+            with self.assertAddsMessages(MessageTest(msg_id='replace-builtin-open', node=node)):
                 self.checker.visit_with(node)
         else:
             with self.assertNoMessages():

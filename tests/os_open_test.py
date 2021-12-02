@@ -19,6 +19,11 @@ import pytest
 
 import pylint_secure_coding_standard as pylint_scs
 
+try:
+    from pylint.testutils import MessageTest
+except ImportError:
+    from pylint.testutils import Message as MessageTest
+
 
 class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     CHECKER_CLASS = pylint_scs.SecureCodingStandardChecker
@@ -128,7 +133,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         self.checker.set_os_open_allowed_modes(arg)
         if expected_warning:
             with self.assertAddsMessages(
-                pylint.testutils.Message(
+                MessageTest(
                     msg_id='os-open-unsafe-permissions', node=node, args=(getattr(self.checker, '_os_open_msg_arg'),)
                 )
             ):
@@ -161,7 +166,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         self.checker.set_os_open_allowed_modes(arg)
         if expected_warning and mode != 0o755:
             with self.assertAddsMessages(
-                pylint.testutils.Message(
+                MessageTest(
                     msg_id='os-open-unsafe-permissions', node=node, args=(getattr(self.checker, '_os_open_msg_arg'),)
                 )
             ):
@@ -192,7 +197,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         node = astroid.extract_node(call_mode.format(mode))
         self.checker.set_os_open_allowed_modes(arg)
         if expected_warning:
-            with self.assertAddsMessages(pylint.testutils.Message(msg_id='os-open-unsafe-permissions', node=node)):
+            with self.assertAddsMessages(MessageTest(msg_id='os-open-unsafe-permissions', node=node)):
                 self.checker.visit_with(node)
         else:
             with self.assertNoMessages():
@@ -212,7 +217,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         node = astroid.extract_node(f'with os.open("file.txt", os.O_WRONLY, 0o{mode:o}) as fd: fd.read() #@')
         self.checker.set_os_open_allowed_modes(arg)
         if expected_warning and mode != 0o755:
-            with self.assertAddsMessages(pylint.testutils.Message(msg_id='os-open-unsafe-permissions', node=node)):
+            with self.assertAddsMessages(MessageTest(msg_id='os-open-unsafe-permissions', node=node)):
                 self.checker.visit_with(node)
         else:
             with self.assertNoMessages():
