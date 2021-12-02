@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
--   Renamed uses of `pylint.testutils.Message` to `pylint.testutils.MessageTest`
+-   Fixed uses of of `pylint.testutils.MessageTest` instead of `pylint.testutils.Message` for Pylint >= 2.12
 
 ### Repository
 
