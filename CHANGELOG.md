@@ -13,12 +13,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
--   Update GitHub `action dangoslen/changelog-enforcer` to v3
 -   Update `black` hook to v21.12b0
 -   Update `check-manifest` hook to v0.47
 -   Update `isort` hook to v5.10.1
 -   Update `flake8` hook to v4.0.1
 -   Update `pre-commit/pre-commit-hooks` to v4.1.0
+-   Update `dangoslen/changelog-enforcer` GitHub action to v3
 -   Update `thomaseizinger/create-pull-request` GitHub action to v1.2.2
 -   Update `thomaseizinger/keep-a-changelog-new-release` GitHub action to v1.3.0
 
