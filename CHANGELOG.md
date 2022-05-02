@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Update `dangoslen/changelog-enforcer` GitHub action to v3
 -   Update `thomaseizinger/create-pull-request` GitHub action to v1.2.2
 -   Update `thomaseizinger/keep-a-changelog-new-release` GitHub action to v1.3.0
+-   Update GitHub's CodeQL action to v2
 
 ## [1.4.0] - 2021-07-29
 
