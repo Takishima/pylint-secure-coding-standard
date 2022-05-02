@@ -49,5 +49,5 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
     def test_assert_not_ok(self, s):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(MessageTest(msg_id='avoid-assert', node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id='avoid-assert', node=node), ignore_position=True):
             self.checker.visit_assert(node)

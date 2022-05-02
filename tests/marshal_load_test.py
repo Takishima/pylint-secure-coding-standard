@@ -52,7 +52,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
     def test_marshal_load_not_ok(self, s):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(MessageTest(msg_id='avoid-marshal-load', node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id='avoid-marshal-load', node=node), ignore_position=True):
             self.checker.visit_call(node)
 
     @pytest.mark.parametrize(
@@ -65,5 +65,5 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
     def test_marshal_open_importfrom(self, s):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(MessageTest(msg_id='avoid-marshal-load', node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id='avoid-marshal-load', node=node), ignore_position=True):
             self.checker.visit_importfrom(node)

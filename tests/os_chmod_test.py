@@ -130,7 +130,9 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         print(code)
         node = astroid.extract_node(code)
         if enabled_platform and forbidden != 'S_IRGRP':
-            with self.assertAddsMessages(MessageTest(msg_id='os-chmod-unsafe-permissions', node=node)):
+            with self.assertAddsMessages(
+                MessageTest(msg_id='os-chmod-unsafe-permissions', node=node), ignore_position=True
+            ):
                 self.checker.visit_call(node)
         else:
             with self.assertNoMessages():

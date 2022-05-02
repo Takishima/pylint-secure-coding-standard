@@ -68,7 +68,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
     def test_shell_true_importfrom(self, s, msg_id):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(MessageTest(msg_id=msg_id, node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id=msg_id, node=node), ignore_position=True):
             self.checker.visit_importfrom(node)
 
     @pytest.mark.parametrize(
@@ -106,5 +106,5 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
     def test_shell_true_call(self, s, msg_id):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(MessageTest(msg_id=msg_id, node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id=msg_id, node=node), ignore_position=True):
             self.checker.visit_call(node)

@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 -   Fixed uses of of `pylint.testutils.MessageTest` instead of `pylint.testutils.Message` for Pylint >= 2.12
+-   Fixed failing tests due to missing `ignore_position` argument to `assertAddsMessages()`
 
 ### Repository
 

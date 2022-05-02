@@ -49,7 +49,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
     def test_pdb_import(self, s):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(MessageTest(msg_id='avoid-debug-stmt', node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id='avoid-debug-stmt', node=node), ignore_position=True):
             self.checker.visit_import(node)
 
     @pytest.mark.parametrize(
@@ -58,7 +58,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
     def test_pdb_importfrom(self, s):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(MessageTest(msg_id='avoid-debug-stmt', node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id='avoid-debug-stmt', node=node), ignore_position=True):
             self.checker.visit_importfrom(node)
 
     @pytest.mark.parametrize(
@@ -72,5 +72,5 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
     def test_pdb_call(self, s):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(MessageTest(msg_id='avoid-debug-stmt', node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id='avoid-debug-stmt', node=node), ignore_position=True):
             self.checker.visit_call(node)
