@@ -51,5 +51,5 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
     def test_eval_exec_call(self, s):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(MessageTest(msg_id='avoid-eval-exec', node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id='avoid-eval-exec', node=node), ignore_position=True):
             self.checker.visit_call(node)

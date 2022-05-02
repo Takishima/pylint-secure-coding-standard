@@ -48,17 +48,17 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     @pytest.mark.parametrize('s', _not_ok)
     def test_shelve_open_call(self, s):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(MessageTest(msg_id='avoid-shelve-open', node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id='avoid-shelve-open', node=node), ignore_position=True):
             self.checker.visit_call(node)
 
     @pytest.mark.parametrize('s', _not_ok)
     def test_shelve_open_with(self, s):
         node = astroid.extract_node(f'with {s} as fd: fd.read() #@')
-        with self.assertAddsMessages(MessageTest(msg_id='avoid-shelve-open', node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id='avoid-shelve-open', node=node), ignore_position=True):
             self.checker.visit_with(node)
 
     @pytest.mark.parametrize('s', ('from shelve import open',))
     def test_shelve_open_importfrom(self, s):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(MessageTest(msg_id='avoid-shelve-open', node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id='avoid-shelve-open', node=node), ignore_position=True):
             self.checker.visit_importfrom(node)

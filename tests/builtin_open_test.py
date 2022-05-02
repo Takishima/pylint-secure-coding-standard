@@ -81,7 +81,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         node = astroid.extract_node(s + ' #@')
         self.checker.set_os_open_allowed_modes(str(os_open_mode))
         if os_open_mode:
-            with self.assertAddsMessages(MessageTest(msg_id='replace-builtin-open', node=node)):
+            with self.assertAddsMessages(MessageTest(msg_id='replace-builtin-open', node=node), ignore_position=True):
                 self.checker.visit_call(node)
         else:
             with self.assertNoMessages():
@@ -93,7 +93,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         node = astroid.extract_node(s + ' #@')
         self.checker.set_os_open_allowed_modes(str(os_open_mode))
         if os_open_mode:
-            with self.assertAddsMessages(MessageTest(msg_id='replace-builtin-open', node=node)):
+            with self.assertAddsMessages(MessageTest(msg_id='replace-builtin-open', node=node), ignore_position=True):
                 self.checker.visit_with(node)
         else:
             with self.assertNoMessages():
