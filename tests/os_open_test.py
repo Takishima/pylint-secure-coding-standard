@@ -135,7 +135,8 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             with self.assertAddsMessages(
                 MessageTest(
                     msg_id='os-open-unsafe-permissions', node=node, args=(getattr(self.checker, '_os_open_msg_arg'),)
-                )
+                ),
+                ignore_position=True,
             ):
                 self.checker.visit_call(node)
         else:
@@ -168,7 +169,8 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             with self.assertAddsMessages(
                 MessageTest(
                     msg_id='os-open-unsafe-permissions', node=node, args=(getattr(self.checker, '_os_open_msg_arg'),)
-                )
+                ),
+                ignore_position=True,
             ):
                 self.checker.visit_call(node)
         else:
@@ -197,7 +199,9 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         node = astroid.extract_node(call_mode.format(mode))
         self.checker.set_os_open_allowed_modes(arg)
         if expected_warning:
-            with self.assertAddsMessages(MessageTest(msg_id='os-open-unsafe-permissions', node=node)):
+            with self.assertAddsMessages(
+                MessageTest(msg_id='os-open-unsafe-permissions', node=node), ignore_position=True
+            ):
                 self.checker.visit_with(node)
         else:
             with self.assertNoMessages():
@@ -217,7 +221,9 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         node = astroid.extract_node(f'with os.open("file.txt", os.O_WRONLY, 0o{mode:o}) as fd: fd.read() #@')
         self.checker.set_os_open_allowed_modes(arg)
         if expected_warning and mode != 0o755:
-            with self.assertAddsMessages(MessageTest(msg_id='os-open-unsafe-permissions', node=node)):
+            with self.assertAddsMessages(
+                MessageTest(msg_id='os-open-unsafe-permissions', node=node), ignore_position=True
+            ):
                 self.checker.visit_with(node)
         else:
             with self.assertNoMessages():

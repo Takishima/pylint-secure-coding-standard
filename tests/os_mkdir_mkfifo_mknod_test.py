@@ -127,7 +127,8 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
                     msg_id=f'os-{function}-unsafe-permissions',
                     node=node,
                     args=(getattr(self.checker, f'_os_{function}_msg_arg'),),
-                )
+                ),
+                ignore_position=True,
             ):
                 self.checker.visit_call(node)
         else:

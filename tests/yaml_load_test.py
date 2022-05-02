@@ -64,5 +64,5 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
     def test_yaml_not_ok(self, s):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(MessageTest(msg_id='avoid-yaml-unsafe-load', node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id='avoid-yaml-unsafe-load', node=node), ignore_position=True):
             self.checker.visit_call(node)

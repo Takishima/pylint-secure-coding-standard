@@ -48,5 +48,5 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
     def test_jsonpickle_decode_not_ok(self, s):
         node = astroid.extract_node(s + ' #@')
-        with self.assertAddsMessages(MessageTest(msg_id='avoid-jsonpickle-decode', node=node)):
+        with self.assertAddsMessages(MessageTest(msg_id='avoid-jsonpickle-decode', node=node), ignore_position=True):
             self.checker.visit_call(node)
