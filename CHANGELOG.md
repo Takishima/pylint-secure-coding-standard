@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.4.1] - 2022-05-04
+
 ### Fixed
 
 -   Fixed uses of of `pylint.testutils.MessageTest` instead of `pylint.testutils.Message` for Pylint >= 2.12
@@ -24,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Update `thomaseizinger/create-pull-request` GitHub action to v1.2.2
 -   Update `thomaseizinger/keep-a-changelog-new-release` GitHub action to v1.3.0
 -   Update GitHub's CodeQL action to v2
+-   Update parse-changelog version to v0.4.7
+-   Fixed issue with release publishing GitHub workflow
 
 ## [1.4.0] - 2021-07-29
 
@@ -109,7 +113,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release
 
-[Unreleased]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.4.1...HEAD
+
+[1.4.1]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.4.0...v1.4.1
 
 [1.4.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.3.1...v1.4.0
 
