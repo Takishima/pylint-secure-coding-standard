@@ -45,24 +45,24 @@ jobs:
           VERSION=${BRANCH_NAME#hotfix/}
           echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
 
-      - name: Set tag for setuptools-scm
-        if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
-        run: git tag v${RELEASE_VERSION} main
-
       - name: Build wheel
         run: |
+          if ! git rev-parse v${RELEASE_VERSION} > /dev/null 2>&1; then
+              _added_tag=1
+              git tag v${RELEASE_VERSION} main
+          fi
+
           python -m pip install build wheel
           python -m build --wheel --sdist
+
+          if [ ${_added_tag:-0} -eq 1 ]; then
+              git tag -d v${RELEASE_VERSION}
+          fi
 
       - name: Check metadata
         run: |
           python3 -m pip install twine --prefer-binary
           python3 -m twine check dist/*
-
-      - name: Delete local tag used by setuptools-scm
-        if: github.event_name == 'push' && !startsWith(github.ref, 'refs/tags/')
-        run: git -d tag v${RELEASE_VERSION}
-
 
       # Code below inspired from this action:
       # - uses: taiki-e/create-gh-release-action@v1
