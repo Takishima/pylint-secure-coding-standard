@@ -3,7 +3,7 @@ ci:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.2.0
+    rev: v4.3.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
@@ -61,7 +61,7 @@ repos:
         files: ^(.*_test\.py)$
 
   - repo: https://github.com/pre-commit/mirrors-pylint
-    rev: 'v3.0.0a4'
+    rev: 'v3.0.0a5'
     hooks:
       - id: pylint
         # This is a slow hook, so only run this if --hook-stage manual is passed

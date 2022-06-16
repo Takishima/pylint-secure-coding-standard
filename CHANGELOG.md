@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Update GitHub release publishing workflow
 
+### Repository
+
+-   Update `pre-commit/pre-commit-hooks` to v4.3.0
+-   Update `pre-commit/mirrors-pylint` to v3.0.0a5
+
 ## [1.4.1] - 2022-05-04
 
 ### Fixed
