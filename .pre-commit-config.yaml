@@ -1,7 +1,13 @@
+---
+
 ci:
-    skip: [check-manifest]
+  skip: [check-manifest]
 
 repos:
+  - repo: meta
+    hooks:
+      - id: check-useless-excludes
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.3.0
     hooks:
@@ -15,7 +21,6 @@ repos:
       - id: end-of-file-fixer
       - id: mixed-line-ending
       - id: trailing-whitespace
-      - id: fix-encoding-pragma
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
     rev: v1.3.1
@@ -25,11 +30,26 @@ repos:
         args:
           - --license-filepath
           - misc/license_header.txt
-  # Changes tabs to spaces
-  - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.3.1
-    hooks:
       - id: remove-tabs
+
+  - repo: https://github.com/PyCQA/doc8/
+    rev: v1.0.0
+    hooks:
+      - id: doc8
+        require_serial: false
+        additional_dependencies: [tomli]
+
+  - repo: https://github.com/codespell-project/codespell
+    rev: v2.2.2
+    hooks:
+      - id: codespell
+        files: .*\.(py|txt|cmake|md|rst|sh|ps1|hpp|tpp|cpp|cc)$
+        args: [-I, .codespell.allow]
+
+  - repo: https://github.com/adrienverge/yamllint.git
+    rev: v1.28.0
+    hooks:
+      - id: yamllint
 
   - repo: https://github.com/PyCQA/isort
     rev: 5.10.1
@@ -38,12 +58,23 @@ repos:
         name: isort (python)
 
   - repo: https://github.com/psf/black
-    rev: 22.8.0
+    rev: 22.10.0
     hooks:
       - id: black
         language_version: python3
-        # This is a slow hook, so only run this if --hook-stage manual is passed
-        stages: [manual]
+
+  - repo: https://github.com/asottile/blacken-docs
+    rev: v1.12.1
+    hooks:
+      - id: blacken-docs
+        args: [-S, -l, '120']
+        additional_dependencies: [black==22.10.0]
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.1.0
+    hooks:
+      - id: pyupgrade
+        args: [--py37-plus, --keep-mock]
 
   - repo: https://github.com/PyCQA/flake8
     rev: 5.0.4
