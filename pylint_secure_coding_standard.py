@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Damien Nguyen
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -431,7 +430,7 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
             'avoid-eval-exec',
             'Use of `eval()` and `exec()` represent a security risk and should be avoided',
         ),
-        'E8002': ('Avoid using `os.sytem()`', 'avoid-os-system', 'Use of `os.system()` should be avoided'),
+        'E8002': ('Avoid using `os.system()`', 'avoid-os-system', 'Use of `os.system()` should be avoided'),
         'E8003': (
             'Avoid using `shell=True` when calling `subprocess` functions and avoid functions that internally call it',
             'avoid-shell-true',
@@ -460,7 +459,7 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
         'C8007': (
             'Avoid debug statement in production code',
             'avoid-debug-stmt',
-            'Use of debugging code shoud not be present in production code (e.g. `import pdb`)',
+            'Use of debugging code should not be present in production code (e.g. `import pdb`)',
         ),
         'C8008': (
             'Avoid `assert` statements in production code',
@@ -615,7 +614,7 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
         elif (
             node.modname == 'subprocess'
             and [name for (name, _) in node.names if name in ('getoutput', 'getstatusoutput')]
-        ) or ((node.modname == 'asyncio' and [name for (name, _) in node.names if name == 'create_subprocess_shell'])):
+        ) or (node.modname == 'asyncio' and [name for (name, _) in node.names if name == 'create_subprocess_shell']):
             self.add_message('avoid-shell-true', node=node)
         elif node.modname == 'os' and [name for (name, _) in node.names if name == 'system']:
             self.add_message('avoid-os-system', node=node)

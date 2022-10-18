@@ -1,3 +1,5 @@
+---
+
 name: "Publish new release"
 
 on:
@@ -14,10 +16,14 @@ jobs:
   release:
     name: Build wheels and release on Pypi
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'pull_request' && github.event.pull_request.merged == true && (startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'hotfix/')))
+    if: >-
+      startsWith(github.ref, 'refs/tags/')
+      || (github.event_name == 'pull_request' && github.event.pull_request.merged == true
+          && (startsWith(github.event.pull_request.head.ref, 'release/')
+              || startsWith(github.event.pull_request.head.ref, 'hotfix/')))
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -32,7 +38,7 @@ jobs:
           echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Extract version from branch name (for release branches)
-        if:  github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'release/')
+        if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'release/')
         run: |
           BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
           VERSION=${BRANCH_NAME#release/}
@@ -75,21 +81,25 @@ jobs:
       - name: Create release
         env:
           target: x86_64-unknown-linux-musl
-          parse_changelog_tag: v0.4.7
+          source_url: https://github.com/taiki-e/parse-changelog/releases/download
+          parse_changelog_tag: v0.5.1
           changelog: CHANGELOG.md
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # https://github.com/taiki-e/parse-changelog
-          curl -LsSf "https://github.com/taiki-e/parse-changelog/releases/download/${parse_changelog_tag}/parse-changelog-${target}.tar.gz" | tar xzf -
+          curl -LsSf "${source_url}/${parse_changelog_tag}/parse-changelog-${target}.tar.gz" | tar xzf -
           notes=$(./parse-changelog "${changelog}" "${RELEASE_VERSION}")
           rm -f ./parse-changelog
           if [[ "${tag}" =~ ^v?[0-9\.]+-[a-zA-Z_0-9\.-]+(\+[a-zA-Z_0-9\.-]+)?$ ]]; then
             prerelease="--prerelease"
           fi
-          gh release create "v${RELEASE_VERSION}" ${prerelease:-} --title "pylint-secure-coding-standard v${RELEASE_VERSION}" --notes "${notes:-}" dist/*
+          gh release create "v${RELEASE_VERSION}" ${prerelease:-} \
+            --title pylint-secure-coding-standard v${RELEASE_VERSION}" \
+            --notes "${notes:-}" \
+            dist/*
 
       - name: Setup Python for Pypi upload
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
 
       - name: Publish standard package
         uses: pypa/gh-action-pypi-publish@release/v1
