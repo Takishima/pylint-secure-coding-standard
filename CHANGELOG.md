@@ -25,6 +25,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Update `pre-commit/pre-commit-hooks` to v4.3.0
 -   Update `pre-commit/mirrors-pylint` to v3.0.0a5
+-   Update `asottile/pyupgrade` to v3.2.0
 -   Update `black` hook to v22.10.0
 -   Update `flake8` hook to v5.0.4
 -   Update `Lucas-C/pre-commit-hooks` hook to v1.3.1
