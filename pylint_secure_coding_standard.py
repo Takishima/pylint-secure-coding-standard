@@ -364,6 +364,7 @@ def _chmod_has_wx_for_go(node):
         if modes is None:
             # NB: this would be from invalid code such as `os.chmod("file.txt")`
             raise RuntimeError('Unable to extract `mode` argument from function call!')
+        # pylint: disable=no-member
         return bool(modes & (stat.S_IWGRP | stat.S_IXGRP | stat.S_IWOTH | stat.S_IXOTH))
 
 
