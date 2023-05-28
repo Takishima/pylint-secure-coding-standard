@@ -36,8 +36,8 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     CHECKER_CLASS = pylint_scs.SecureCodingStandardChecker
 
     @pytest.mark.parametrize(
-        'arg, expected',
-        (
+        ('arg', 'expected'),
+        [
             ('0', 0),
             ('false', None),
             ('False', None),
@@ -56,28 +56,29 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             ('0o755', 0o755),
             ('0o755,', [0o755]),
             ('0o644, 0o755,', [0o644, 0o755]),
-        ),
+        ],
         ids=_id_func,
     )
     def test_read_octal_mode_option(self, arg, expected):
         print(f'INFO: expected: {expected}')
         assert pylint_scs._read_octal_mode_option('test', arg, _default_modes) == expected
 
-    @pytest.mark.parametrize('arg', ('', ',', ',,', 'nope', 'asd', 'a,', '493, a'))
+    @pytest.mark.parametrize('arg', ['', ',', ',,', 'nope', 'asd', 'a,', '493, a'])
     def test_read_octal_mode_option_invalid(self, arg):
-        with pytest.raises(ValueError):
+        # with pytest.raises(ValueError, match='^Unable to convert .* elements to integers!$'):
+        with pytest.raises(ValueError, match='^(Invalid value for|Calculated empty value for|Unable to convert).*'):
             pylint_scs._read_octal_mode_option('test', arg, _default_modes)
 
-    @pytest.mark.parametrize('function', ('open', 'mkdir', 'mkfifo', 'mknod'))
+    @pytest.mark.parametrize('function', ['open', 'mkdir', 'mkfifo', 'mknod'])
     @pytest.mark.parametrize(
-        'arg, allowed_modes',
-        (
+        ('arg', 'allowed_modes'),
+        [
             ('n', []),
             ('y', _default_modes),
             ('0', []),
             ('0o755', _default_modes),
             ('0o644, 0o755,', [0o644, 0o755]),
-        ),
+        ],
         ids=_id_func,
     )
     def test_os_allowed_mode(self, function, arg, allowed_modes):

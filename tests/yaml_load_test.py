@@ -29,7 +29,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     def test_yaml_ok(self):
         nodes = astroid.extract_node(
-            """
+            '''
             int(0) #@
             foo() #@
             yaml.safe_load("!!python/object/new:os.system [echo EXPLOIT!]") #@
@@ -37,7 +37,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             yaml.load("!!python/object/new:os.system [echo EXPLOIT!]", Loader=SafeLoader) #@
             yaml.load("!!python/object/new:os.system [echo EXPLOIT!]", BaseLoader) #@
             yaml.load("!!python/object/new:os.system [echo EXPLOIT!]", SafeLoader) #@
-            """
+            '''
         )
 
         with self.assertNoMessages():
@@ -47,7 +47,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     @pytest.mark.parametrize(
         's',
-        (
+        [
             'full_load("!!python/object/new:os.system [echo EXPLOIT!]")',
             'unsafe_load("!!python/object/new:os.system [echo EXPLOIT!]")',
             'yaml.load("!!python/object/new:os.system [echo EXPLOIT!]")',
@@ -59,7 +59,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             'yaml.load("!!python/object/new:os.system [echo EXPLOIT!]", Loader)',
             'yaml.load("!!python/object/new:os.system [echo EXPLOIT!]", UnsafeLoader)',
             'yaml.load("!!python/object/new:os.system [echo EXPLOIT!]", FullLoader)',
-        ),
+        ],
     )
     def test_yaml_not_ok(self, s):
         node = astroid.extract_node(s + ' #@')

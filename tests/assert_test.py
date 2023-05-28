@@ -29,10 +29,10 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     def test_assert_ok(self):
         call_node1, call_node2 = astroid.extract_node(
-            """
+            '''
         int(0) #@
         foo() #@
-        """
+        '''
         )
 
         with self.assertNoMessages():
@@ -41,10 +41,10 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     @pytest.mark.parametrize(
         's',
-        (
+        [
             'assert len(s) > 0',
             'assert (my_set and my_list), "Some message"',
-        ),
+        ],
     )
     def test_assert_not_ok(self, s):
         node = astroid.extract_node(s + ' #@')

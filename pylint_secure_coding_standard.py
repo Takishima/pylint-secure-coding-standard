@@ -146,10 +146,10 @@ def _is_builtin_open_for_writing(node):
 
         if any(m in mode for m in 'awx'):
             # Cover:
-            #  * open(..., "w")
-            #  * open(..., "wb")
-            #  * open(..., "a")
-            #  * open(..., "x")
+            #  * open(..., "w").
+            #  * open(..., "wb").
+            #  * open(..., "a").
+            #  * open(..., "x").
             return True
     return False
 
@@ -176,6 +176,7 @@ def _is_allowed_mode(node, allowed_modes, args_idx):
 
 
 def _is_shell_true_call(node):
+    _n_args_max = 8
     if not (isinstance(node.func, astroid.Attribute) and isinstance(node.func.expr, astroid.Name)):
         return False
 
@@ -191,7 +192,11 @@ def _is_shell_true_call(node):
                     ):
                         return True
 
-            if len(node.args) > 8 and isinstance(node.args[8], astroid.Const) and bool(node.args[8].value):
+            if (
+                len(node.args) > _n_args_max
+                and isinstance(node.args[_n_args_max], astroid.Const)
+                and bool(node.args[_n_args_max].value)
+            ):
                 return True
 
         if node.func.attrname in ('getoutput', 'getstatusoutput'):
@@ -207,37 +212,36 @@ def _is_shell_true_call(node):
 
 
 def _is_pdb_call(node):
-    if isinstance(node.func, astroid.Attribute):
-        if isinstance(node.func.expr, astroid.Name) and node.func.expr.name == 'pdb':
-            # Cover:
-            #  * pdb.func()
-            return True
-    if isinstance(node.func, astroid.Name):
-        if node.func.name == 'Pdb':
-            # Cover:
-            # * Pdb()
-            return True
+    if (
+        isinstance(node.func, astroid.Attribute)
+        and isinstance(node.func.expr, astroid.Name)
+        and node.func.expr.name == 'pdb'
+    ):
+        # Cover:
+        return True
+    if isinstance(node.func, astroid.Name) and node.func.name == 'Pdb':
+        # Cover:
+        return True
     return False
 
 
 def _is_mktemp_call(node):
-    if isinstance(node.func, astroid.Attribute):
-        if node.func.attrname == 'mktemp':
-            # Cover:
-            #  * tempfile.mktemp()
-            #  * xxxx.mktemp()
-            return True
-    if isinstance(node.func, astroid.Name):
-        if node.func.name == 'mktemp':
-            # Cover:
-            #  * mktemp()
-            return True
+    if isinstance(node.func, astroid.Attribute) and node.func.attrname == 'mktemp':
+        # Cover:
+        #  * pdb.func().
+        return True
+    if isinstance(node.func, astroid.Name) and node.func.name == 'mktemp':
+        # Cover:
+        # * Pdb().
+        return True
     return False
 
 
 def _is_yaml_unsafe_call(node):
+    _load_n_args_max = 2
     _safe_loaders = ('BaseLoader', 'SafeLoader')
     _unsafe_loaders = ('Loader', 'UnsafeLoader', 'FullLoader')
+
     if (
         isinstance(node.func, astroid.Attribute)
         and isinstance(node.func.expr, astroid.Name)
@@ -245,38 +249,39 @@ def _is_yaml_unsafe_call(node):
     ):
         if node.func.attrname in ('unsafe_load', 'full_load'):
             # Cover:
-            #  * yaml.full_load()
-            #  * yaml.unsafe_load()
+            #  * yaml.full_load().
+            #  * yaml.unsafe_load().
             return True
         if node.func.attrname == 'load' and node.keywords:
             for keyword in node.keywords:
                 if keyword.arg == 'Loader' and isinstance(keyword.value, astroid.Name):
                     if keyword.value.name in _unsafe_loaders:
                         # Cover:
-                        #  * yaml.load(x, Loader=Loader)
-                        #  * yaml.load(x, Loader=UnsafeLoader)
-                        #  * yaml.load(x, Loader=FullLoader)
+                        #  * yaml.load(x, Loader=Loader).
+                        #  * yaml.load(x, Loader=UnsafeLoader).
+                        #  * yaml.load(x, Loader=FullLoader).
                         return True
                     if keyword.value.name in _safe_loaders:
                         # Cover:
-                        #  * yaml.load(x, Loader=BaseLoader)
-                        #  * yaml.load(x, Loader=SafeLoader)
+                        #  * yaml.load(x, Loader=BaseLoader).
+                        #  * yaml.load(x, Loader=SafeLoader).
                         return False
-        elif node.func.attrname == 'load':
-            if len(node.args) < 2 or (isinstance(node.args[1], astroid.Name) and node.args[1].name in _unsafe_loaders):
-                # Cover:
-                #  * yaml.load(x)
-                #  * yaml.load(x, Loader)
-                #  * yaml.load(x, UnsafeLoader)
-                #  * yaml.load(x, FullLoader)
-                return True
-
-    if isinstance(node.func, astroid.Name):
-        if node.func.name in ('unsafe_load', 'full_load'):
+        elif node.func.attrname == 'load' and (
+            len(node.args) < _load_n_args_max
+            or (isinstance(node.args[1], astroid.Name) and node.args[1].name in _unsafe_loaders)
+        ):
             # Cover:
-            #  * unsafe_load(...)
-            #  * full_load(...)
+            #  * yaml.load(x).
+            #  * yaml.load(x, Loader).
+            #  * yaml.load(x, UnsafeLoader).
+            #  * yaml.load(x, FullLoader).
             return True
+
+    if isinstance(node.func, astroid.Name) and node.func.name in ('unsafe_load', 'full_load'):
+        # Cover:
+        #  * unsafe_load(...).
+        #  * full_load(...).
+        return True
     return False
 
 
@@ -537,7 +542,7 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
         self._os_mknod_msg_arg = ''
         self._os_mknod_modes_allowed = []
 
-    def visit_call(self, node):  # pylint: disable=too-many-branches
+    def visit_call(self, node):  # pylint: disable=too-many-branches # noqa: PLR0912
         """Visitor method called for astroid.Call nodes."""
         if _is_pdb_call(node):
             self.add_message('avoid-debug-stmt', node=node)
@@ -597,11 +602,11 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
 
     def visit_import(self, node):
         """Visitor method called for astroid.Import nodes."""
-        for (name, _) in node.names:
+        for name, _ in node.names:
             if name == 'pdb':
                 # Cover:
-                #  * import pdb
-                #  * import pdb as xxx
+                #  * import pdb.
+                #  * import pdb as xxx.
                 self.add_message('avoid-debug-stmt', node=node)
 
     def visit_importfrom(self, node):

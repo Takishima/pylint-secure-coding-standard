@@ -29,12 +29,12 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     def test_shell_true_ok(self):
         import_node1, call_node1, call_node2, call_node3 = astroid.extract_node(
-            """
+            '''
             from os import realpath #@
             os.path.realpath(variable) #@
             os.path.realpath("/opt/file.txt") #@
             os.path.realpath("../file.txt") #@
-            """
+            '''
         )
 
         with self.assertNoMessages():
@@ -45,11 +45,11 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     @pytest.mark.parametrize(
         's',
-        (
+        [
             'from os.path import abspath',
             'from os.path import relpath',
             'from os.path import join, relpath',
-        ),
+        ],
     )
     def test_shell_true_importfrom(self, s):
         node = astroid.extract_node(s + ' #@')
@@ -58,7 +58,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     @pytest.mark.parametrize(
         's',
-        (
+        [
             'os.path.abspath("/opt/file.txt")',
             'os.path.abspath("../file.txt")',
             'os.path.relpath("file.txt")',
@@ -67,7 +67,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             'op.abspath("../file.txt")',
             'op.relpath("file.txt")',
             'op.relpath("file.txt", start="/")',
-        ),
+        ],
     )
     def test_shell_true_call(self, s):
         node = astroid.extract_node(s + ' #@')

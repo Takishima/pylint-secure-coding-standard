@@ -29,12 +29,12 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     def test_pickle_load_ok(self):
         nodes = astroid.extract_node(
-            """
+            '''
             int(0) #@
             foo() #@
             pickle.dump(data, "file.txt") #@
             pickle.dumps(data) #@
-            """
+            '''
         )
 
         with self.assertNoMessages():
@@ -43,11 +43,11 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     @pytest.mark.parametrize(
         's',
-        (
+        [
             'pickle.load("file.txt")',
             r'pickle.loads(b"\x80\x04K\x01.")',
             'pickle.loads(data)',
-        ),
+        ],
     )
     def test_pickle_load_not_ok(self, s):
         node = astroid.extract_node(s + ' #@')
@@ -56,11 +56,11 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     @pytest.mark.parametrize(
         's',
-        (
+        [
             'from pickle import load',
             'from pickle import loads',
             'from pickle import dump, load',
-        ),
+        ],
     )
     def test_pickle_open_importfrom(self, s):
         node = astroid.extract_node(s + ' #@')

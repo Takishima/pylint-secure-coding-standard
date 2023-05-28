@@ -29,7 +29,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     def test_builtin_open_ok(self):
         nodes = astroid.extract_node(
-            """
+            '''
             int(0) #@
             foo() #@
             open("file.txt") #@
@@ -38,7 +38,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             with open("file.txt") as fd: fd.read() #@
             with bla.open("file.txt") as fd: fd.read() #@
             with bla.open("file.txt", "w") as fd: fd.read() #@
-            """
+            '''
         )
 
         call_nodes = nodes[:5]
@@ -46,9 +46,9 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
         with self.assertNoMessages():
             self.checker.set_os_open_allowed_modes('True')
-            for idx, node in enumerate(call_nodes):
+            for _idx, node in enumerate(call_nodes):
                 self.checker.visit_call(node)
-            for idx, node in enumerate(with_nodes):
+            for _idx, node in enumerate(with_nodes):
                 self.checker.visit_with(node)
 
     _calls_not_ok = (
@@ -75,7 +75,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
 
     @pytest.mark.parametrize('s', _calls_not_ok)
-    @pytest.mark.parametrize('os_open_mode', (False, True))
+    @pytest.mark.parametrize('os_open_mode', [False, True])
     def test_builtin_open_call(self, s, os_open_mode):
         node = astroid.extract_node(s + ' #@')
         self.checker.set_os_open_allowed_modes(str(os_open_mode))
@@ -86,8 +86,8 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             with self.assertNoMessages():
                 self.checker.visit_call(node)
 
-    @pytest.mark.parametrize('s', ('with ' + s + ' as fd: fd.read()' for s in _calls_not_ok))
-    @pytest.mark.parametrize('os_open_mode', (False, True))
+    @pytest.mark.parametrize('s', ['with ' + s + ' as fd: fd.read()' for s in _calls_not_ok])
+    @pytest.mark.parametrize('os_open_mode', [False, True])
     def test_builtin_open_with(self, s, os_open_mode):
         node = astroid.extract_node(s + ' #@')
         self.checker.set_os_open_allowed_modes(str(os_open_mode))

@@ -29,11 +29,11 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     def test_jsonpickle_decode_ok(self):
         nodes = astroid.extract_node(
-            """
+            '''
             int(0) #@
             foo() #@
             jsonpickle.encode(pvars) #@
-            """
+            '''
         )
 
         with self.assertNoMessages():
@@ -43,7 +43,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     @pytest.mark.parametrize(
         's',
-        ('jsonpickle.decode(payload)',),
+        ['jsonpickle.decode(payload)'],
     )
     def test_jsonpickle_decode_not_ok(self, s):
         node = astroid.extract_node(s + ' #@')

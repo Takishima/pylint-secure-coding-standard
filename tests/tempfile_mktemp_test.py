@@ -29,11 +29,11 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     def test_tempfile_mktemp_ok(self):
         import_node1, import_node2, call_node1 = astroid.extract_node(
-            """
+            '''
         import tempfile #@
         import tempfile as temp #@
         tempfile.mkstemp() #@
-        """
+        '''
         )
 
         with self.assertNoMessages():
@@ -43,7 +43,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     @pytest.mark.parametrize(
         's',
-        ('from tempfile import mktemp',),
+        ['from tempfile import mktemp'],
     )
     def test_tempfile_mktemp_importfrom(self, s):
         node = astroid.extract_node(s + ' #@')
@@ -52,10 +52,10 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     @pytest.mark.parametrize(
         's',
-        (
+        [
             'mktemp()',
             'tempfile.mktemp()',
-        ),
+        ],
     )
     def test_tempfile_mktemp_call(self, s):
         node = astroid.extract_node(s + ' #@')

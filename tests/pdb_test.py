@@ -29,10 +29,10 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     def test_pdb_ok(self):
         call_node1, call_node2 = astroid.extract_node(
-            """
+            '''
         int(0) #@
         foo() #@
-        """
+        '''
         )
 
         with self.assertNoMessages():
@@ -41,10 +41,10 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     @pytest.mark.parametrize(
         's',
-        (
+        [
             'import pdb',
             'import pdb, six',
-        ),
+        ],
     )
     def test_pdb_import(self, s):
         node = astroid.extract_node(s + ' #@')
@@ -53,7 +53,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     @pytest.mark.parametrize(
         's',
-        ('from pdb import set_trace',),
+        ['from pdb import set_trace'],
     )
     def test_pdb_importfrom(self, s):
         node = astroid.extract_node(s + ' #@')
@@ -62,12 +62,12 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     @pytest.mark.parametrize(
         's',
-        (
+        [
             'pdb.set_trace()',
             'pdb.post_mortem(traceback=None)',
             'pdb.Pdb(skip=["django.*"])',
             'Pdb(skip=["django.*"])',
-        ),
+        ],
     )
     def test_pdb_call(self, s):
         node = astroid.extract_node(s + ' #@')
