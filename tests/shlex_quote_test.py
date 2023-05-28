@@ -28,17 +28,17 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     CHECKER_CLASS = pylint_scs.SecureCodingStandardChecker
 
     @pytest.mark.parametrize(
-        'platform, expected_success',
-        (
+        ('platform', 'expected_success'),
+        [
             ('Linux', True),
             ('Darwin', True),
             ('Java', False),
             ('Windows', False),
-        ),
+        ],
     )
-    @pytest.mark.parametrize('s', ('from shlex import quote',))
+    @pytest.mark.parametrize('s', ['from shlex import quote'])
     def test_shlex_quote_importfrom(self, mocker, platform, expected_success, s):
-        mocker.patch('platform.system', lambda: platform)
+        mocker.patch('platform.system', return_value=platform)
 
         node = astroid.extract_node(s + ' #@')
         if expected_success:
@@ -50,23 +50,23 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
                 self.checker.visit_importfrom(node)
 
     @pytest.mark.parametrize(
-        'platform, expected_success',
-        (
+        ('platform', 'expected_success'),
+        [
             ('Linux', True),
             ('Darwin', True),
             ('Java', False),
             ('Windows', False),
-        ),
+        ],
     )
     @pytest.mark.parametrize(
         's',
-        (
+        [
             'shlex.quote("ls -l")',
             'shlex.quote(command_str)',
-        ),
+        ],
     )
     def test_shlex_call_quote(self, mocker, platform, expected_success, s):
-        mocker.patch('platform.system', lambda: platform)
+        mocker.patch('platform.system', return_value=platform)
 
         node = astroid.extract_node(s + ' #@')
         if expected_success:

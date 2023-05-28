@@ -29,7 +29,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     def test_shell_true_ok(self):
         nodes = astroid.extract_node(
-            """
+            '''
             subprocess.Popen(["cat", "/etc/passwd"], b, e, i, o, e, pre, c) #@
             subprocess.Popen(["cat", "/etc/passwd"], b, e, i, o, e, pre, c, False) #@
             subprocess.Popen(["cat", "/etc/passwd"], b, e, i, o, e, pre, c, False, cwd) #@
@@ -43,7 +43,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             sp.check_call(["cat", "/etc/passwd"], shell=False) #@
             subprocess.check_output(["cat", "/etc/passwd"], shell=False) #@
             sp.check_output(["cat", "/etc/passwd"], shell=False) #@
-            """
+            '''
         )
 
         with self.assertNoMessages():
@@ -51,8 +51,8 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
                 self.checker.visit_call(node)
 
     @pytest.mark.parametrize(
-        's, msg_id',
-        (
+        ('s', 'msg_id'),
+        [
             ('from os import system', 'avoid-os-system'),
             ('from os import system as os_system', 'avoid-os-system'),
             ('from os import popen', 'avoid-os-popen'),
@@ -63,7 +63,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             ('from subprocess import getstatusoutput as sp_getstatusoutput', 'avoid-shell-true'),
             ('from asyncio import create_subprocess_shell', 'avoid-shell-true'),
             ('from asyncio import create_subprocess_shell as create_sp_shell', 'avoid-shell-true'),
-        ),
+        ],
     )
     def test_shell_true_importfrom(self, s, msg_id):
         node = astroid.extract_node(s + ' #@')
@@ -71,8 +71,8 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             self.checker.visit_importfrom(node)
 
     @pytest.mark.parametrize(
-        's, msg_id',
-        (
+        ('s', 'msg_id'),
+        [
             ('os.system("ls -l")', 'avoid-os-system'),
             ('subprocess.Popen(["cat", "/etc/passwd"], b, e, i, o, e, pre, c, True)', 'avoid-shell-true'),
             ('subprocess.Popen(["cat", "/etc/passwd"], b, e, i, o, e, pre, c, True, cwd)', 'avoid-shell-true'),
@@ -101,7 +101,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             ('os.popen("cat", buffering=1)', 'avoid-os-popen'),
             ('os.popen("cat", mode="w")', 'avoid-os-popen'),
             ('os.popen("cat", mode="w", buffering=1)', 'avoid-os-popen'),
-        ),
+        ],
     )
     def test_shell_true_call(self, s, msg_id):
         node = astroid.extract_node(s + ' #@')

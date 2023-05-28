@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Updated
 
 -   Update GitHub release publishing workflow
+-   Replace most Python pre-commit hooks with [ruff](https://beta.ruff.rs/docs/)
 -   Added some more pre-commit hooks:
     +  doc8
     +  codespell
@@ -24,16 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Repository
 
 -   Update `thomaseizinger/create-pull-request` GitHub Action to v1.3.0
--   Update `Lucas-C/pre-commit-hooks` hook to v1.4.1
--   Update `asottile/pyupgrade` to v3.2.0
--   Update `black` hook to v22.10.0
+-   Update `Lucas-C/pre-commit-hooks` hook to v1.5.1
+-   Update `black` hook to v23.3.0
 -   Update `blacken-docs` hook to v1.13.0
--   Update `flake8` hook to v5.0.4
--   Update `pre-commit/mirrors-pylint` to v3.0.0a5
 -   Update `pre-commit/pre-commit-hooks` to v4.3.0
--   Update `pyupgrade` hook to v3.3.1
--   Update `yamllint` hook to v1.29.0
--   Update `isort` hook to v5.11.4
+-   Update `yamllint` hook to v1.32.0
+-   Update `codespell` hook to v2.2.4
 
 ## [1.4.1] - 2022-05-04
 

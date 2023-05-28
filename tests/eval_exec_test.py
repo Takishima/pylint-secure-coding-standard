@@ -29,12 +29,12 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     def test_eval_exec_ok(self):
         call_node1, call_node2 = astroid.extract_node(
-            """
+            '''
         int(0) #@
         foo() #@
         sympy.sqrt(8).evalf()
         myvar.eval()
-        """
+        '''
         )
 
         with self.assertNoMessages():
@@ -43,10 +43,10 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     @pytest.mark.parametrize(
         's',
-        (
+        [
             'eval(input("Your input> "))',
             r'exec("a = 5\nb=10\nprint(\"Sum =\", a+b)")',
-        ),
+        ],
     )
     def test_eval_exec_call(self, s):
         node = astroid.extract_node(s + ' #@')

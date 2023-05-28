@@ -29,20 +29,20 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     def test_shelve_open_ok(self):
         nodes = astroid.extract_node(
-            """
+            '''
             int(0) #@
             foo() #@
-            """
+            '''
         )
 
         with self.assertNoMessages():
             for node in nodes:
                 self.checker.visit_call(node)
 
-    _not_ok = (
+    _not_ok = [
         'shelve.open("file.txt")',
         'shelve.open(filename)',
-    )
+    ]
 
     @pytest.mark.parametrize('s', _not_ok)
     def test_shelve_open_call(self, s):
@@ -56,7 +56,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         with self.assertAddsMessages(MessageTest(msg_id='avoid-shelve-open', node=node), ignore_position=True):
             self.checker.visit_with(node)
 
-    @pytest.mark.parametrize('s', ('from shelve import open',))
+    @pytest.mark.parametrize('s', ['from shelve import open'])
     def test_shelve_open_importfrom(self, s):
         node = astroid.extract_node(s + ' #@')
         with self.assertAddsMessages(MessageTest(msg_id='avoid-shelve-open', node=node), ignore_position=True):

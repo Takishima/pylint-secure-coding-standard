@@ -29,12 +29,12 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     def test_marshal_load_ok(self):
         nodes = astroid.extract_node(
-            """
+            '''
             int(0) #@
             foo() #@
             marshal.dump(data, "file.txt") #@
             marshal.dumps(data) #@
-            """
+            '''
         )
 
         with self.assertNoMessages():
@@ -43,11 +43,11 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     @pytest.mark.parametrize(
         's',
-        (
+        [
             'marshal.load("file.txt")',
             r'marshal.loads(b"\xe9\x01\x00\x00\x00")',
             'marshal.loads(data)',
-        ),
+        ],
     )
     def test_marshal_load_not_ok(self, s):
         node = astroid.extract_node(s + ' #@')
@@ -56,11 +56,11 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     @pytest.mark.parametrize(
         's',
-        (
+        [
             'from marshal import load',
             'from marshal import loads',
             'from marshal import dump, load',
-        ),
+        ],
     )
     def test_marshal_open_importfrom(self, s):
         node = astroid.extract_node(s + ' #@')

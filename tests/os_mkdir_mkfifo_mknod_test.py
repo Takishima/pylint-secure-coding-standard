@@ -53,18 +53,12 @@ except ImportError:
 class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     CHECKER_CLASS = pylint_scs.SecureCodingStandardChecker
 
-    @pytest.mark.parametrize(
-        'platform',
-        ('Linux', 'Darwin', 'Java', 'Windows'),
-    )
-    @pytest.mark.parametrize('function', ('mkdir', 'mkfifo', 'mknod'))
-    @pytest.mark.parametrize(
-        'option',
-        (False, True),
-    )
+    @pytest.mark.parametrize('platform', ['Linux', 'Darwin', 'Java', 'Windows'])
+    @pytest.mark.parametrize('function', ['mkdir', 'mkfifo', 'mknod'])
+    @pytest.mark.parametrize('option', [False, True])
     @pytest.mark.parametrize(
         's',
-        (
+        [
             # mkdir
             'os.mkdir("/tmp/test")',
             'os.mkdir(dir_name)',
@@ -87,10 +81,10 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             'os.mknod(dir_name)',
             'os.mknod(dir_name, 0o644)',
             'os.mknod(dir_name, mode=mode)',
-        ),
+        ],
     )
     def test_os_function_ok(self, mocker, platform, function, option, s):
-        mocker.patch('platform.system', lambda: platform)
+        mocker.patch('platform.system', return_value=platform)
         getattr(self.checker, f'set_os_{function}_allowed_modes')(str(option))
 
         node = astroid.extract_node(s + ' #@')
@@ -99,23 +93,23 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             self.checker.visit_call(node)
 
     @pytest.mark.parametrize(
-        'platform, enabled_platform',
-        (
+        ('platform', 'enabled_platform'),
+        [
             ('Linux', True),
             ('Darwin', True),
             ('Java', False),
             ('Windows', False),
-        ),
+        ],
     )
     @pytest.mark.parametrize(
         'option',
-        (False, True),
+        [False, True],
     )
     @pytest.mark.parametrize(
-        'function, s', ((function, s) for function, tests in _os_function_strings.items() for s in tests)
+        ('function', 's'), [(function, s) for function, tests in _os_function_strings.items() for s in tests]
     )
     def test_os_function_call(self, mocker, platform, enabled_platform, function, option, s):
-        mocker.patch('platform.system', lambda: platform)
+        mocker.patch('platform.system', return_value=platform)
         getattr(self.checker, f'set_os_{function}_allowed_modes')(str(option))
 
         print(s + ' #@')
