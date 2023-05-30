@@ -11,21 +11,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changed minimum Python version to 3.8.X
 
-### Updated
+### Repository
 
-- Update GitHub release publishing workflow
 - Replace most Python pre-commit hooks with [ruff](https://beta.ruff.rs/docs/)
+- Update release drafting GitHub workflow
+- Add workflow to automatically update CHANGELOG when pre-commit.ci updates happen
 - Added some more pre-commit hooks:
   - doc8
   - codespell
   - yamllint
   - blacken-docs
-  - pyupgrade
-
-### Repository
-
-- Update release drafting GitHub workflow
-- Add workflow to automatically update CHANGELOG when pre-commit.ci updates happen
 - Update `thomaseizinger/create-pull-request` GitHub Action to v1.3.0
 - Update `Lucas-C/pre-commit-hooks` hook to v1.5.1
 - Update `black` hook to v23.3.0
