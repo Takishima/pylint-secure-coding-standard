@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Replace most Python pre-commit hooks with [ruff](https://beta.ruff.rs/docs/)
 - Update release drafting GitHub workflow
-- Add workflow to automatically update CHANGELOG when pre-commit.ci updates happen
+- Modify pull requests workflow to automatically update CHANGELOG file if it was created by pre-commit.ci
 - Added some more pre-commit hooks:
   - doc8
   - codespell
