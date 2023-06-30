@@ -14,9 +14,12 @@
 
 """Main file for the pylint_secure_coding_standard plugin."""
 
+from __future__ import annotations
+
 import operator
 import platform
 import stat
+from typing import ClassVar
 
 import astroid
 from pylint.checkers import BaseChecker
@@ -425,7 +428,7 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
     )
     priority = -1
 
-    msgs = {
+    msgs: ClassVar[dict[str, tuple[str, str, str]]] = {
         'R8000': (
             'Use `os.path.realpath()` instead of `os.path.abspath()` and `os.path.relpath()`',
             'replace-os-relpath-abspath',
