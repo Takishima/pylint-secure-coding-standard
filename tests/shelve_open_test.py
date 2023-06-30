@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from __future__ import annotations
+
+from typing import ClassVar
+
 import astroid
 import pylint.testutils
 import pytest
@@ -39,7 +43,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             for node in nodes:
                 self.checker.visit_call(node)
 
-    _not_ok = [
+    _not_ok: ClassVar[list[str]] = [
         'shelve.open("file.txt")',
         'shelve.open(filename)',
     ]
