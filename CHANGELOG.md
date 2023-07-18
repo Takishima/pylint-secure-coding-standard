@@ -21,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - codespell
   - yamllint
   - blacken-docs
-- Update `thomaseizinger/create-pull-request` GitHub Action to v1.3.0
+- Update `thomaseizinger/create-pull-request` GitHub Action to v1.3.1
 - Update `astral-sh/ruff-pre-commit` to v0.0.278
 - Update `asottile/blacken-docs` hook to v1.15.0
 - Update `charliermarsh/ruff-pre-commit` hook to v0.0.275
