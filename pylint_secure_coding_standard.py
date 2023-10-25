@@ -23,7 +23,6 @@ from typing import ClassVar
 
 import astroid
 from pylint.checkers import BaseChecker
-from pylint.interfaces import IAstroidChecker
 
 # ==============================================================================
 # Helper functions
@@ -383,8 +382,6 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
     """Plugin class."""
 
     DEFAULT_MAX_MODE = 0o755
-
-    __implements__ = (IAstroidChecker,)
 
     name = 'secure-coding-standard'
     options = (

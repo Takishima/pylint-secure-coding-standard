@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changed minimum Python version to 3.8.X
 
+### Fixed
+
+- Compatibility with Pylint 3.0
+
 ### Repository
 
 - Replace most Python pre-commit hooks with [ruff](https://beta.ruff.rs/docs/)
