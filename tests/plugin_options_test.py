@@ -17,7 +17,7 @@ import pytest
 
 import pylint_secure_coding_standard as pylint_scs
 
-_default_modes = list(range(0, pylint_scs.SecureCodingStandardChecker.DEFAULT_MAX_MODE + 1))
+_default_modes = list(range(pylint_scs.SecureCodingStandardChecker.DEFAULT_MAX_MODE + 1))
 
 
 def _id_func(arg):
