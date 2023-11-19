@@ -657,7 +657,7 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
         modes = _read_octal_mode_option(config_name, value, self.DEFAULT_MAX_MODE)
 
         if isinstance(modes, int) and modes > 0:
-            setattr(self, f'_os_{name}_modes_allowed', list(range(0, modes + 1)))
+            setattr(self, f'_os_{name}_modes_allowed', list(range(modes + 1)))
             setattr(self, f'_os_{name}_msg_arg', f'0 < mode < {oct(modes)}')
         elif modes:
             setattr(self, f'_os_{name}_modes_allowed', modes)
