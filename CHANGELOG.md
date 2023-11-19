@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Changed minimum Python version to 3.8.X
+- Requires Pylint 3.0
 
 ### Fixed
 
@@ -33,6 +34,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update `pre-commit/pre-commit-hooks` hook to v4.5.0
 - Update `psf/black` hook to v23.11.0
 - Update `yamllint` hook to v1.33.0
+- Update GitHub Action `stefanzweifel/git-auto-commit-action` to v5
 
 ## [v1.4.1] - 2022-05-04
 
