@@ -723,7 +723,7 @@ def load_configuration(linter):  # pragma: no cover
     """Load data from the configuration file."""
     for checker in linter.get_checkers():
         if isinstance(checker, SecureCodingStandardChecker):
-            checker.set_os_open_allowed_modes(checker.config.os_open_mode)
-            checker.set_os_mkdir_allowed_modes(checker.config.os_mkdir_mode)
-            checker.set_os_mkfifo_allowed_modes(checker.config.os_mkfifo_mode)
-            checker.set_os_mknod_allowed_modes(checker.config.os_mknod_mode)
+            checker.set_os_open_allowed_modes(checker.linter.config.os_open_mode)
+            checker.set_os_mkdir_allowed_modes(checker.linter.config.os_mkdir_mode)
+            checker.set_os_mkfifo_allowed_modes(checker.linter.config.os_mkfifo_mode)
+            checker.set_os_mknod_allowed_modes(checker.linter.config.os_mknod_mode)
