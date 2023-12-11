@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
-- Update `astral-sh/ruff-pre-commit` hook to v0.1.6
+- Update `astral-sh/ruff-pre-commit` hook to v0.1.7
 
 ## [v1.5.0] - 2023-11-19
 
