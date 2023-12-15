@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pylint_secure_coding_standard as pylint_scs
+
 import astroid
 import pylint.testutils
 import pytest
-
-import pylint_secure_coding_standard as pylint_scs
 
 _os_function_strings = {
     'mkdir': (
@@ -83,7 +83,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             'os.mknod(dir_name, mode=mode)',
         ],
     )
-    def test_os_function_ok(self, mocker, platform, function, option, s):
+    def test_os_function_ok(self, mocker, platform, function, option, s):  # noqa: PLR0917
         mocker.patch('platform.system', return_value=platform)
         getattr(self.checker, f'set_os_{function}_allowed_modes')(str(option))
 
@@ -108,7 +108,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     @pytest.mark.parametrize(
         ('function', 's'), [(function, s) for function, tests in _os_function_strings.items() for s in tests]
     )
-    def test_os_function_call(self, mocker, platform, enabled_platform, function, option, s):
+    def test_os_function_call(self, mocker, platform, enabled_platform, function, option, s):  # noqa: PLR0917
         mocker.patch('platform.system', return_value=platform)
         getattr(self.checker, f'set_os_{function}_allowed_modes')(str(option))
 

@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pylint_secure_coding_standard as pylint_scs
+
 import pylint.testutils
 import pytest
-
-import pylint_secure_coding_standard as pylint_scs
 
 _default_modes = list(range(pylint_scs.SecureCodingStandardChecker.DEFAULT_MAX_MODE + 1))
 
@@ -59,12 +59,12 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         ],
         ids=_id_func,
     )
-    def test_read_octal_mode_option(self, arg, expected):
+    def test_read_octal_mode_option(self, arg, expected):  # noqa: PLR6301
         print(f'INFO: expected: {expected}')
         assert pylint_scs._read_octal_mode_option('test', arg, _default_modes) == expected
 
     @pytest.mark.parametrize('arg', ['', ',', ',,', 'nope', 'asd', 'a,', '493, a'])
-    def test_read_octal_mode_option_invalid(self, arg):
+    def test_read_octal_mode_option_invalid(self, arg):  # noqa: PLR6301
         # with pytest.raises(ValueError, match='^Unable to convert .* elements to integers!$'):
         with pytest.raises(ValueError, match='^(Invalid value for|Calculated empty value for|Unable to convert).*'):
             pylint_scs._read_octal_mode_option('test', arg, _default_modes)

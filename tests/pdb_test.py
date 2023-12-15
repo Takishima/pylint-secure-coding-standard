@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pylint_secure_coding_standard as pylint_scs
+
 import astroid
 import pylint.testutils
 import pytest
-
-import pylint_secure_coding_standard as pylint_scs
 
 try:
     from pylint.testutils import MessageTest
@@ -29,10 +29,10 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     def test_pdb_ok(self):
         call_node1, call_node2 = astroid.extract_node(
-            '''
+            """
         int(0) #@
         foo() #@
-        '''
+        """
         )
 
         with self.assertNoMessages():
