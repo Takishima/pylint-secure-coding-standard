@@ -32,7 +32,7 @@ def _is_posix():
     """Return True if the current system is POSIX-compatible."""
     # NB: we could simply use `os.name` instead of `platform.system()`. However, that solution would be difficult to
     #     test using `mock` as a few modules (like `pytest`) actually use it internally...
-    return platform.system() in ('Linux', 'Darwin')
+    return platform.system() in {'Linux', 'Darwin'}
 
 
 _is_unix = _is_posix
@@ -40,7 +40,7 @@ _is_unix = _is_posix
 # ==============================================================================
 
 
-def _read_octal_mode_option(name, value, default):
+def _read_octal_mode_option(name, value, default):  # noqa: C901
     """
     Read an integer or list of integer configuration option.
 
@@ -78,23 +78,27 @@ def _read_octal_mode_option(name, value, default):
         try:
             allowed_modes = [_str_to_int(mode) for mode in modes if mode]
         except ValueError as error:
-            raise ValueError(f'Unable to convert {modes} elements to integers!') from error
+            msg = f'Unable to convert {modes} elements to integers!'
+            raise ValueError(msg) from error
         else:
             if not allowed_modes:
-                raise ValueError(f'Calculated empty value for `{name}`!')
+                msg = f'Calculated empty value for `{name}`!'
+                raise ValueError(msg)
             return allowed_modes
     elif modes and modes[0]:
         # Single values (ie. max allowed value for mode)
         try:
             return _str_to_int(value)
         except ValueError as error:
-            if value in ('y', 'yes', 'true'):
+            if value in {'y', 'yes', 'true'}:
                 return default
-            if value in ('n', 'no', 'false'):
+            if value in {'n', 'no', 'false'}:
                 return None
-            raise ValueError(f'Invalid value for `{name}`: {value}!') from error
+            msg = f'Invalid value for `{name}`: {value}!'
+            raise ValueError(msg) from error
     else:
-        raise ValueError(f'Invalid value for `{name}`: {value}!')
+        msg = f'Invalid value for `{name}`: {value}!'
+        raise ValueError(msg)
 
 
 # ==============================================================================
@@ -126,7 +130,7 @@ def _is_os_path_call(node):
                 and node.func.expr.expr.name == 'os'
             )
         )
-        and node.func.attrname in ('abspath', 'relpath')
+        and node.func.attrname in {'abspath', 'relpath'}
     )
 
 
@@ -183,8 +187,8 @@ def _is_shell_true_call(node):
         return False
 
     # subprocess module
-    if node.func.expr.name in ('subprocess', 'sp'):
-        if node.func.attrname in ('call', 'check_call', 'check_output', 'Popen', 'run'):
+    if node.func.expr.name in {'subprocess', 'sp'}:
+        if node.func.attrname in {'call', 'check_call', 'check_output', 'Popen', 'run'}:
             if node.keywords:
                 for keyword in node.keywords:
                     if (
@@ -201,7 +205,7 @@ def _is_shell_true_call(node):
             ):
                 return True
 
-        if node.func.attrname in ('getoutput', 'getstatusoutput'):
+        if node.func.attrname in {'getoutput', 'getstatusoutput'}:
             return True
 
     # asyncio module
@@ -249,7 +253,7 @@ def _is_yaml_unsafe_call(node):
         and isinstance(node.func.expr, astroid.Name)
         and node.func.expr.name == 'yaml'
     ):
-        if node.func.attrname in ('unsafe_load', 'full_load'):
+        if node.func.attrname in {'unsafe_load', 'full_load'}:
             # Cover:
             #  * yaml.full_load().
             #  * yaml.unsafe_load().
@@ -279,7 +283,7 @@ def _is_yaml_unsafe_call(node):
             #  * yaml.load(x, FullLoader).
             return True
 
-    if isinstance(node.func, astroid.Name) and node.func.name in ('unsafe_load', 'full_load'):
+    if isinstance(node.func, astroid.Name) and node.func.name in {'unsafe_load', 'full_load'}:
         # Cover:
         #  * unsafe_load(...).
         #  * full_load(...).
@@ -348,7 +352,8 @@ def _chmod_get_mode(node):
     if isinstance(node, astroid.BinOp):
         return _binop[node.op](_chmod_get_mode(node.left), _chmod_get_mode(node.right))
 
-    raise ValueError(f'Do not know how to process node: {node.repr_tree()}')
+    msg = f'Do not know how to process node: {node.repr_tree()}'
+    raise ValueError(msg)
 
 
 def _chmod_has_wx_for_go(node):
@@ -370,7 +375,8 @@ def _chmod_has_wx_for_go(node):
     else:
         if modes is None:
             # NB: this would be from invalid code such as `os.chmod("file.txt")`
-            raise RuntimeError('Unable to extract `mode` argument from function call!')
+            msg = 'Unable to extract `mode` argument from function call!'
+            raise RuntimeError(msg)
         # pylint: disable=no-member
         return bool(modes & (stat.S_IWGRP | stat.S_IXGRP | stat.S_IWOTH | stat.S_IXOTH))
 
@@ -440,11 +446,9 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
         'E8003': (
             'Avoid using `shell=True` when calling `subprocess` functions and avoid functions that internally call it',
             'avoid-shell-true',
-            ' '.join(
-                [
-                    'Use of `shell=True` in subprocess functions or use of functions that internally set it should be'
-                    'should be avoided',
-                ]
+            (
+                'Use of `shell=True` in subprocess functions or use of functions that internally set it should be '
+                'should be avoided'
             ),
         ),
         'R8004': (
@@ -542,7 +546,7 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
         self._os_mknod_msg_arg = ''
         self._os_mknod_modes_allowed = []
 
-    def visit_call(self, node):  # pylint: disable=too-many-branches # noqa: PLR0912
+    def visit_call(self, node):  # pylint: disable=too-many-branches # noqa: PLR0912, C901
         """Visitor method called for astroid.Call nodes."""
         if _is_pdb_call(node):
             self.add_message('avoid-debug-stmt', node=node)
@@ -562,7 +566,7 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
             self.add_message('avoid-os-popen', node=node)
         elif _is_builtin_open_for_writing(node) and self._os_open_modes_allowed:
             self.add_message('replace-builtin-open', node=node)
-        elif isinstance(node.func, astroid.Name) and (node.func.name in ('eval', 'exec')):
+        elif isinstance(node.func, astroid.Name) and (node.func.name in {'eval', 'exec'}):
             self.add_message('avoid-eval-exec', node=node)
         elif not _is_posix() and _is_function_call(node, module='shlex', function='quote'):
             self.add_message('avoid-shlex-quote-on-non-posix', node=node)
@@ -609,17 +613,17 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
                 #  * import pdb as xxx.
                 self.add_message('avoid-debug-stmt', node=node)
 
-    def visit_importfrom(self, node):
+    def visit_importfrom(self, node):  # noqa: C901
         """Visitor method called for astroid.ImportFrom nodes."""
         if node.modname == 'pdb':
             self.add_message('avoid-debug-stmt', node=node)
         elif node.modname == 'tempfile' and [name for (name, _) in node.names if name == 'mktemp']:
             self.add_message('replace-mktemp', node=node)
-        elif node.modname in ('os.path', 'op') and [name for (name, _) in node.names if name in ('relpath', 'abspath')]:
+        elif node.modname in {'os.path', 'op'} and [name for (name, _) in node.names if name in {'relpath', 'abspath'}]:
             self.add_message('replace-os-relpath-abspath', node=node)
         elif (
             node.modname == 'subprocess'
-            and [name for (name, _) in node.names if name in ('getoutput', 'getstatusoutput')]
+            and [name for (name, _) in node.names if name in {'getoutput', 'getstatusoutput'}]
         ) or (node.modname == 'asyncio' and [name for (name, _) in node.names if name == 'create_subprocess_shell']):
             self.add_message('avoid-shell-true', node=node)
         elif node.modname == 'os' and [name for (name, _) in node.names if name == 'system']:
@@ -628,9 +632,9 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
             self.add_message('avoid-os-popen', node=node)
         elif not _is_posix() and node.modname == 'shlex' and [name for (name, _) in node.names if name == 'quote']:
             self.add_message('avoid-shlex-quote-on-non-posix', node=node)
-        elif node.modname == 'pickle' and [name for (name, _) in node.names if name in ('load', 'loads')]:
+        elif node.modname == 'pickle' and [name for (name, _) in node.names if name in {'load', 'loads'}]:
             self.add_message('avoid-pickle-load', node=node)
-        elif node.modname == 'marshal' and [name for (name, _) in node.names if name in ('load', 'loads')]:
+        elif node.modname == 'marshal' and [name for (name, _) in node.names if name in {'load', 'loads'}]:
             self.add_message('avoid-marshal-load', node=node)
         elif node.modname == 'shelve' and [name for (name, _) in node.names if name == 'open']:
             self.add_message('avoid-shelve-open', node=node)

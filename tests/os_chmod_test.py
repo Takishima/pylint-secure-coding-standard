@@ -14,11 +14,11 @@
 
 import stat
 
+import pylint_secure_coding_standard as pylint_scs
+
 import astroid
 import pylint.testutils
 import pytest
-
-import pylint_secure_coding_standard as pylint_scs
 
 try:
     from pylint.testutils import MessageTest
@@ -39,7 +39,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             ('stat.S_IREAD | stat.S_IWRITE | S_IXUSR', stat.S_IREAD | stat.S_IWRITE | stat.S_IXUSR),
         ],
     )
-    def test_chmod_get_mode(self, s, expected):
+    def test_chmod_get_mode(self, s, expected):  # noqa: PLR6301
         node = astroid.extract_node(s + ' #@')
         assert pylint_scs._chmod_get_mode(node) == expected
 
@@ -50,7 +50,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             'bla.S_IREAD',
         ],
     )
-    def test_chmod_get_mode_invalid(self, s):
+    def test_chmod_get_mode_invalid(self, s):  # noqa: PLR6301
         node = astroid.extract_node(s + ' #@')
         with pytest.raises(ValueError, match='Do not know how to process'):
             pylint_scs._chmod_get_mode(node)
@@ -63,7 +63,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             ('not stat.S_IREAD', not stat.S_IREAD),
         ],
     )
-    def test_chmod_get_mode_unop(self, s, expected):
+    def test_chmod_get_mode_unop(self, s, expected):  # noqa: PLR6301
         node = astroid.extract_node(s + ' #@')
         assert pylint_scs._chmod_get_mode(node) == expected
 
@@ -81,7 +81,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             ('stat.S_IREAD & stat.S_IWRITE', stat.S_IREAD & stat.S_IWRITE),
         ],
     )
-    def test_chmod_get_mode_binop(self, s, expected):
+    def test_chmod_get_mode_binop(self, s, expected):  # noqa: PLR6301
         node = astroid.extract_node(s + ' #@')
         assert pylint_scs._chmod_get_mode(node) == expected
 
@@ -118,7 +118,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         ],
         ids=lambda s: s if s else '<empty>',
     )
-    def test_chmod(self, mocker, platform, enabled_platform, fname, arg_type, forbidden, s):
+    def test_chmod(self, mocker, platform, enabled_platform, fname, arg_type, forbidden, s):  # noqa: PLR0917
         mocker.patch('platform.system', return_value=platform)
 
         if s:
