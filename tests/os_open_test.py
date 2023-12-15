@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pylint_secure_coding_standard as pylint_scs
+
 import astroid
 import pylint.testutils
 import pytest
-
-import pylint_secure_coding_standard as pylint_scs
 
 try:
     from pylint.testutils import MessageTest
@@ -33,7 +33,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     )
     def test_os_open_ok(self, arg):
         nodes = astroid.extract_node(
-            '''
+            """
             int(0) #@
             foo() #@
             os.open("file.txt") #@
@@ -94,7 +94,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             with bla.open("file.txt", flags=os.O_RDONLY | os.O_NOFOLLOW, mode=mode) as fd: fd.read() #@
             with bla.open("file.txt", flags=os.O_RDONLY | os.O_NOFOLLOW, mode=0o644) as fd: fd.read() #@
             with bla.open("file.txt", flags=os.O_RDONLY | os.O_NOFOLLOW, mode=0o777) as fd: fd.read() #@
-            '''
+            """
         )
 
         self.checker.set_os_open_allowed_modes(arg)
@@ -110,14 +110,14 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
                 call_nodes.append(node)
 
         with self.assertNoMessages():
-            for _idx, node in enumerate(call_nodes):
+            for node in call_nodes:
                 self.checker.visit_call(node)
-            for _idx, node in enumerate(with_nodes):
+            for node in with_nodes:
                 self.checker.visit_with(node)
 
     # ==========================================================================
 
-    @pytest.mark.parametrize('mode', range(0o756, 0o777 + 1), ids=lambda arg: oct(arg))
+    @pytest.mark.parametrize('mode', range(0o756, 0o777 + 1), ids=oct)
     @pytest.mark.parametrize(
         ('arg', 'expected_warning'),
         [
@@ -142,7 +142,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     # --------------------------------------------------------------------------
 
-    @pytest.mark.parametrize('mode', range(0o750, 0o761), ids=lambda arg: oct(arg))
+    @pytest.mark.parametrize('mode', range(0o750, 0o761), ids=oct)
     @pytest.mark.parametrize(
         'call_mode',
         [
@@ -174,7 +174,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     # ==========================================================================
 
-    @pytest.mark.parametrize('mode', range(0o756, 0o777 + 1), ids=lambda arg: oct(arg))
+    @pytest.mark.parametrize('mode', range(0o756, 0o777 + 1), ids=oct)
     @pytest.mark.parametrize(
         'call_mode',
         [
@@ -204,7 +204,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     # --------------------------------------------------------------------------
 
-    @pytest.mark.parametrize('mode', range(0o750, 0o761), ids=lambda arg: oct(arg))
+    @pytest.mark.parametrize('mode', range(0o750, 0o761), ids=oct)
     @pytest.mark.parametrize(
         ('arg', 'expected_warning'),
         [

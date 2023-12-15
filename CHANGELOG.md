@@ -10,10 +10,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - Configuration options retrieval on Pylint 3
+- GitHub workflows
 
 ### Repository
 
-- Update `astral-sh/ruff-pre-commit` hook to v0.1.7
+- Update `adrienverge/yamllint` hook to v1.33.0
+- Update `astral-sh/ruff-pre-commit` hook to v0.1.8
 
 ## [v1.5.0] - 2023-11-19
 
@@ -152,7 +154,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release
 
-[unreleased]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.5.0...HEAD
+[1.5.1]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.5.0...1.5.1
+[unreleased]: https://github.com/Takishima/pylint-secure-coding-standard/compare/1.5.1...HEAD
 [v1.0.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/375145a3dec096ff4e33901ef749a1a9a6f4edc6...v1.0.0
 [v1.1.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.0.0...v1.1.0
 [v1.2.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.1.0...v1.2.0

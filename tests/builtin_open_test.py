@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import pylint_secure_coding_standard as pylint_scs
+
 import astroid
 import pylint.testutils
 import pytest
-
-import pylint_secure_coding_standard as pylint_scs
 
 try:
     from pylint.testutils import MessageTest
@@ -29,7 +29,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     def test_builtin_open_ok(self):
         nodes = astroid.extract_node(
-            '''
+            """
             int(0) #@
             foo() #@
             open("file.txt") #@
@@ -38,7 +38,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             with open("file.txt") as fd: fd.read() #@
             with bla.open("file.txt") as fd: fd.read() #@
             with bla.open("file.txt", "w") as fd: fd.read() #@
-            '''
+            """
         )
 
         call_nodes = nodes[:5]
@@ -46,9 +46,9 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
         with self.assertNoMessages():
             self.checker.set_os_open_allowed_modes('True')
-            for _idx, node in enumerate(call_nodes):
+            for node in call_nodes:
                 self.checker.visit_call(node)
-            for _idx, node in enumerate(with_nodes):
+            for node in with_nodes:
                 self.checker.visit_with(node)
 
     _calls_not_ok = (

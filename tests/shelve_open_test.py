@@ -16,11 +16,11 @@ from __future__ import annotations
 
 from typing import ClassVar
 
+import pylint_secure_coding_standard as pylint_scs
+
 import astroid
 import pylint.testutils
 import pytest
-
-import pylint_secure_coding_standard as pylint_scs
 
 try:
     from pylint.testutils import MessageTest
@@ -33,10 +33,10 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
     def test_shelve_open_ok(self):
         nodes = astroid.extract_node(
-            '''
+            """
             int(0) #@
             foo() #@
-            '''
+            """
         )
 
         with self.assertNoMessages():
