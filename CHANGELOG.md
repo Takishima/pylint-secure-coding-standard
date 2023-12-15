@@ -7,15 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [1.5.1] - 2023-12-15
-
 ### Fixed
 
 - Configuration options retrieval on Pylint 3
+- GitHub workflows
 
 ### Repository
 
-- Update `astral-sh/ruff-pre-commit` hook to v0.1.7
+- Update `adrienverge/yamllint` hook to v1.33.0
+- Update `astral-sh/ruff-pre-commit` hook to v0.1.8
 
 ## [v1.5.0] - 2023-11-19
 
