@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Repository
+
+- Update GitHub Actions `github/codeql-action` from v2 to v3
+
 ## [v1.5.1] - 2023-12-15
 
 ### Fixed
