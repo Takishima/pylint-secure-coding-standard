@@ -83,7 +83,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             'os.mknod(dir_name, mode=mode)',
         ],
     )
-    def test_os_function_ok(self, mocker, platform, function, option, s):  # noqa: PLR0917
+    def test_os_function_ok(self, mocker, platform, function, option, s):
         mocker.patch('platform.system', return_value=platform)
         getattr(self.checker, f'set_os_{function}_allowed_modes')(str(option))
 
