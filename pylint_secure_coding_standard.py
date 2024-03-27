@@ -209,12 +209,9 @@ def _is_shell_true_call(node):
             return True
 
     # asyncio module
-    if (node.func.expr.name == 'asyncio' and node.func.attrname == 'create_subprocess_shell') or (
+    return (node.func.expr.name == 'asyncio' and node.func.attrname == 'create_subprocess_shell') or (
         node.func.expr.name == 'loop' and node.func.attrname == 'subprocess_shell'
-    ):
-        return True
-
-    return False
+    )
 
 
 def _is_pdb_call(node):
@@ -225,10 +222,9 @@ def _is_pdb_call(node):
     ):
         # Cover:
         return True
-    if isinstance(node.func, astroid.Name) and node.func.name == 'Pdb':
-        # Cover:
-        return True
-    return False
+    
+    # Cover:
+    return isinstance(node.func, astroid.Name) and node.func.name == 'Pdb'
 
 
 def _is_mktemp_call(node):
@@ -236,11 +232,9 @@ def _is_mktemp_call(node):
         # Cover:
         #  * pdb.func().
         return True
-    if isinstance(node.func, astroid.Name) and node.func.name == 'mktemp':
-        # Cover:
-        # * Pdb().
-        return True
-    return False
+    # Cover:
+    # * Pdb().
+    return isinstance(node.func, astroid.Name) and node.func.name == 'mktemp'
 
 
 def _is_yaml_unsafe_call(node):
@@ -283,12 +277,10 @@ def _is_yaml_unsafe_call(node):
             #  * yaml.load(x, FullLoader).
             return True
 
-    if isinstance(node.func, astroid.Name) and node.func.name in {'unsafe_load', 'full_load'}:
-        # Cover:
-        #  * unsafe_load(...).
-        #  * full_load(...).
-        return True
-    return False
+    # Cover:
+    #  * unsafe_load(...).
+    #  * full_load(...).
+    return isinstance(node.func, astroid.Name) and node.func.name in {'unsafe_load', 'full_load'}
 
 
 # ==============================================================================
