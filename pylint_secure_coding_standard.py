@@ -222,7 +222,7 @@ def _is_pdb_call(node):
     ):
         # Cover:
         return True
-    
+
     # Cover:
     return isinstance(node.func, astroid.Name) and node.func.name == 'Pdb'
 
