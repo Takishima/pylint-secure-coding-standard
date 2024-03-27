@@ -68,6 +68,6 @@ repos:
         args:
           - --fix
           - --exit-non-zero-on-fix
-          - --show-source
+          - --output-format=full
           - --show-fixes
           - --preview
