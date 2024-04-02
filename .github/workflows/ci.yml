@@ -30,7 +30,7 @@ jobs:
         || (github.event_name == 'pull_request' && github.event.pull_request.merged != true))
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -38,7 +38,7 @@ jobs:
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
           architecture: 'x64'
