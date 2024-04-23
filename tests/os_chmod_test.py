@@ -116,7 +116,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
             'S_IREAD | S_IWRITE',
             'S_IRUSR | S_IWUSR | S_IXUSR',
         ],
-        ids=lambda s: s if s else '<empty>',
+        ids=lambda s: s or '<empty>',
     )
     def test_chmod(self, mocker, platform, enabled_platform, fname, arg_type, forbidden, s):  # noqa: PLR0917
         mocker.patch('platform.system', return_value=platform)
