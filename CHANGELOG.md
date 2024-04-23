@@ -13,8 +13,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update `action/checkout` GitHub Action to v4
 - Update `github/codeql-action/analyze` GitHub Action to v3
 - Update `adrienverge/yamllint.git` hook to v1.35.1
-- Update `astral-sh/ruff-pre-commit` hook to v0.3.5
+- Update `astral-sh/ruff-pre-commit` hook to v0.4.1
 - Update `Lucas-C/pre-commit-hooks` hook to v1.5.5
+- Update `pre-commit/pre-commit-hooks` hook to v4.6.0
 
 ## [v1.5.1] - 2023-12-15
 
