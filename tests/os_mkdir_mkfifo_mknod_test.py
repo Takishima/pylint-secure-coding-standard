@@ -108,7 +108,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     @pytest.mark.parametrize(
         ('function', 's'), [(function, s) for function, tests in _os_function_strings.items() for s in tests]
     )
-    def test_os_function_call(self, mocker, platform, enabled_platform, function, option, s):  # noqa: PLR0917
+    def test_os_function_call(self, mocker, platform, enabled_platform, function, option, s):  # ruff: ignore[too-many-positional-arguments]
         mocker.patch('platform.system', return_value=platform)
         getattr(self.checker, f'set_os_{function}_allowed_modes')(str(option))
 
