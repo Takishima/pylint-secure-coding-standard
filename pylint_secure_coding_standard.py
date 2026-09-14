@@ -40,7 +40,7 @@ _is_unix = _is_posix
 # ==============================================================================
 
 
-def _read_octal_mode_option(name, value, default):  # noqa: C901
+def _read_octal_mode_option(name, value, default):  # ruff: ignore[complex-structure]
     """
     Read an integer or list of integer configuration option.
 
@@ -538,7 +538,7 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
         self._os_mknod_msg_arg = ''
         self._os_mknod_modes_allowed = []
 
-    def visit_call(self, node):  # pylint: disable=too-many-branches # noqa: PLR0912, C901
+    def visit_call(self, node):  # pylint: disable=too-many-branches # ruff: ignore[too-many-branches, complex-structure]
         """Visitor method called for astroid.Call nodes."""
         if _is_pdb_call(node):
             self.add_message('avoid-debug-stmt', node=node)
@@ -605,7 +605,7 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
                 #  * import pdb as xxx.
                 self.add_message('avoid-debug-stmt', node=node)
 
-    def visit_importfrom(self, node):  # noqa: C901
+    def visit_importfrom(self, node):  # ruff: ignore[complex-structure]
         """Visitor method called for astroid.ImportFrom nodes."""
         if node.modname == 'pdb':
             self.add_message('avoid-debug-stmt', node=node)
