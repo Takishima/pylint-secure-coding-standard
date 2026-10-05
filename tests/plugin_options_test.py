@@ -59,12 +59,12 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
         ],
         ids=_id_func,
     )
-    def test_read_octal_mode_option(self, arg, expected):  # noqa: PLR6301
+    def test_read_octal_mode_option(self, arg, expected):  # ruff: ignore[no-self-use]
         print(f'INFO: expected: {expected}')
         assert pylint_scs._read_octal_mode_option('test', arg, _default_modes) == expected
 
     @pytest.mark.parametrize('arg', ['', ',', ',,', 'nope', 'asd', 'a,', '493, a'])
-    def test_read_octal_mode_option_invalid(self, arg):  # noqa: PLR6301
+    def test_read_octal_mode_option_invalid(self, arg):  # ruff: ignore[no-self-use]
         # with pytest.raises(ValueError, match='^Unable to convert .* elements to integers!$'):
         with pytest.raises(ValueError, match='^(Invalid value for|Calculated empty value for|Unable to convert).*'):
             pylint_scs._read_octal_mode_option('test', arg, _default_modes)
