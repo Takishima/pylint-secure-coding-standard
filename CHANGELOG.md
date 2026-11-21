@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Run CI for Python 3.10 to 3.15 on Linux, Windows and macOS
 - Upload coverage data using the `coverallsapp/github-action` GitHub Action
 - Group all GitHub Actions updates from Dependabot into a single pull request
+- Avoid shell injection from pull request data in GitHub workflows
+- Restrict the default `GITHUB_TOKEN` permissions in all GitHub workflows
 - Update `adrienverge/yamllint.git` hook to v1.35.1
 - Update `astral-sh/ruff-pre-commit` hook to v0.4.7
 - Update `codespell-project/codespell` hook to v2.3.0

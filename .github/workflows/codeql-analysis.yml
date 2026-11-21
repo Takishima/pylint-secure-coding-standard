@@ -23,6 +23,8 @@ on:  # yamllint disable-line rule:truthy
   schedule:
     - cron: '24 9 * * 0'
 
+permissions: {}
+
 jobs:
   analyze:
     name: Analyze
