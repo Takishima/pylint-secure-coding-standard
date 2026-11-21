@@ -6,7 +6,7 @@ updates:
     directory: "/"
     schedule:
       interval: "weekly"
-    # Bundle all GitHub Actions updates into a single pull request
+    # Bundle all updates into a single pull request
     groups:
       github-actions:
         patterns:
