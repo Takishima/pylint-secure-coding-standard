@@ -25,11 +25,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Group all GitHub Actions updates from Dependabot into a single pull request
 - Avoid shell injection from pull request data in GitHub workflows
 - Restrict the default `GITHUB_TOKEN` permissions in all GitHub workflows
-- Update `adrienverge/yamllint.git` hook to v1.35.1
-- Update `astral-sh/ruff-pre-commit` hook to v0.4.7
-- Update `codespell-project/codespell` hook to v2.3.0
-- Update `Lucas-C/pre-commit-hooks` hook to v1.5.5
-- Update `pre-commit/pre-commit-hooks` hook to v4.6.0
+- Update `adrienverge/yamllint.git` hook to v1.38.0
+- Update `asottile/blacken-docs` hook to v1.20.0
+- Update `astral-sh/ruff-pre-commit` hook to v0.17.5
+- Update `codespell-project/codespell` hook to v2.4.3
+- Update `Lucas-C/pre-commit-hooks` hook to v1.5.6
+- Update `pre-commit/pre-commit-hooks` hook to v6.0.0
+- Remove the `doc8` pre-commit hook (no reStructuredText files in the repository)
+- Run the `ruff` linter hook before the formatter hook and use the new `ruff-check` hook id
+- Remove deprecated and removed settings from the `ruff` configuration
 
 ## [v1.5.1] - 2023-12-15
 

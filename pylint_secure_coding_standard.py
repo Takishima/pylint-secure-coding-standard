@@ -182,7 +182,7 @@ def _is_allowed_mode(node, allowed_modes, args_idx):
 
 
 def _is_shell_true_call(node):
-    _n_args_max = 8
+    n_args_max = 8
     if not (isinstance(node.func, astroid.Attribute) and isinstance(node.func.expr, astroid.Name)):
         return False
 
@@ -199,9 +199,9 @@ def _is_shell_true_call(node):
                         return True
 
             if (
-                len(node.args) > _n_args_max
-                and isinstance(node.args[_n_args_max], astroid.Const)
-                and bool(node.args[_n_args_max].value)
+                len(node.args) > n_args_max
+                and isinstance(node.args[n_args_max], astroid.Const)
+                and bool(node.args[n_args_max].value)
             ):
                 return True
 
@@ -238,9 +238,9 @@ def _is_mktemp_call(node):
 
 
 def _is_yaml_unsafe_call(node):
-    _load_n_args_max = 2
-    _safe_loaders = ('BaseLoader', 'SafeLoader')
-    _unsafe_loaders = ('Loader', 'UnsafeLoader', 'FullLoader')
+    load_n_args_max = 2
+    safe_loaders = ('BaseLoader', 'SafeLoader')
+    unsafe_loaders = ('Loader', 'UnsafeLoader', 'FullLoader')
 
     if (
         isinstance(node.func, astroid.Attribute)
@@ -255,20 +255,20 @@ def _is_yaml_unsafe_call(node):
         if node.func.attrname == 'load' and node.keywords:
             for keyword in node.keywords:
                 if keyword.arg == 'Loader' and isinstance(keyword.value, astroid.Name):
-                    if keyword.value.name in _unsafe_loaders:
+                    if keyword.value.name in unsafe_loaders:
                         # Cover:
                         #  * yaml.load(x, Loader=Loader).
                         #  * yaml.load(x, Loader=UnsafeLoader).
                         #  * yaml.load(x, Loader=FullLoader).
                         return True
-                    if keyword.value.name in _safe_loaders:
+                    if keyword.value.name in safe_loaders:
                         # Cover:
                         #  * yaml.load(x, Loader=BaseLoader).
                         #  * yaml.load(x, Loader=SafeLoader).
                         return False
         elif node.func.attrname == 'load' and (
-            len(node.args) < _load_n_args_max
-            or (isinstance(node.args[1], astroid.Name) and node.args[1].name in _unsafe_loaders)
+            len(node.args) < load_n_args_max
+            or (isinstance(node.args[1], astroid.Name) and node.args[1].name in unsafe_loaders)
         ):
             # Cover:
             #  * yaml.load(x).
@@ -353,24 +353,24 @@ def _chmod_has_wx_for_go(node):
         # On Windows, only stat.S_IREAD and stat.S_IWRITE can be used, all other bits are ignored
         return False
 
+    mode_node = None
+    if len(node.args) > 1:
+        mode_node = node.args[1]
+    elif node.keywords:
+        mode_node = next((keyword.value for keyword in node.keywords if keyword.arg == 'mode'), None)
+
+    if mode_node is None:
+        # NB: this would be from invalid code such as `os.chmod("file.txt")`
+        msg = 'Unable to extract `mode` argument from function call!'
+        raise RuntimeError(msg)
+
     try:
-        modes = None
-        if len(node.args) > 1:
-            modes = _chmod_get_mode(node.args[1])
-        elif node.keywords:
-            for keyword in node.keywords:
-                if keyword.arg == 'mode':
-                    modes = _chmod_get_mode(keyword.value)
-                    break
+        modes = _chmod_get_mode(mode_node)
     except ValueError:
         return False
-    else:
-        if modes is None:
-            # NB: this would be from invalid code such as `os.chmod("file.txt")`
-            msg = 'Unable to extract `mode` argument from function call!'
-            raise RuntimeError(msg)
-        # pylint: disable=no-member
-        return bool(modes & (stat.S_IWGRP | stat.S_IXGRP | stat.S_IWOTH | stat.S_IXOTH))
+
+    # pylint: disable=no-member
+    return bool(modes & (stat.S_IWGRP | stat.S_IXGRP | stat.S_IWOTH | stat.S_IXOTH))
 
 
 # ==============================================================================
@@ -471,8 +471,10 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
         'R8005': (
             'Avoid builtin open() when writing to files, prefer os.open()',
             'replace-builtin-open',
-            'Use of builtin `open` for writing is discouraged in favor of `os.open` to allow for setting file '
-            'permissions',
+            (
+                'Use of builtin `open` for writing is discouraged in favor of `os.open` to allow for setting file '
+                'permissions'
+            ),
         ),
         'E8010': (
             'Avoid using `os.popen()`',

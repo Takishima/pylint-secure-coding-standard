@@ -29,18 +29,11 @@ repos:
           - misc/license_header.txt
       - id: remove-tabs
 
-  - repo: https://github.com/PyCQA/doc8/
-    rev: v2.0.0
-    hooks:
-      - id: doc8
-        require_serial: false
-        additional_dependencies: [tomli]
-
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.3
     hooks:
       - id: codespell
-        files: .*\.(py|txt|cmake|md|rst|sh|ps1|hpp|tpp|cpp|cc)$
+        files: \.(py|txt|md)$
         args: [-I, .codespell.allow]
 
   - repo: https://github.com/adrienverge/yamllint.git
@@ -53,16 +46,13 @@ repos:
     hooks:
       - id: blacken-docs
         args: [-S, -l, '120']
-        additional_dependencies: [black==23.3.0]
+        additional_dependencies: [black==26.10.1]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.17.5
     hooks:
-      - id: ruff-format
-        name: ruff (format)
-        args: [--preview]
-
-      - id: ruff
+      # NB: lint (with fixes) before formatting, since fixes may need reformatting
+      - id: ruff-check
         name: ruff (fix)
         alias: ruff-fix
         args:
@@ -71,3 +61,7 @@ repos:
           - --output-format=full
           - --show-fixes
           - --preview
+
+      - id: ruff-format
+        name: ruff (format)
+        args: [--preview]

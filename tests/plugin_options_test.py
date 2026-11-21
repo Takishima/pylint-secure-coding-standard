@@ -21,13 +21,13 @@ _default_modes = list(range(pylint_scs.SecureCodingStandardChecker.DEFAULT_MAX_M
 
 
 def _id_func(arg):
-    _max_len = 4
+    max_len = 4
     if arg == _default_modes:
         return 'default_modes'
-    if isinstance(arg, list) and len(arg) > _max_len:
+    if isinstance(arg, list) and len(arg) > max_len:
         return '[{}...{}]'.format(
-            ','.join(str(val) for val in arg[:_max_len]),
-            ','.join(str(val) for val in arg[-_max_len:]),
+            ','.join(str(val) for val in arg[:max_len]),
+            ','.join(str(val) for val in arg[-max_len:]),
         )
     return str(arg)
 
@@ -66,7 +66,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
     @pytest.mark.parametrize('arg', ['', ',', ',,', 'nope', 'asd', 'a,', '493, a'])
     def test_read_octal_mode_option_invalid(self, arg):  # ruff: ignore[no-self-use]
         # with pytest.raises(ValueError, match='^Unable to convert .* elements to integers!$'):
-        with pytest.raises(ValueError, match='^(Invalid value for|Calculated empty value for|Unable to convert).*'):
+        with pytest.raises(ValueError, match=r'^(Invalid value for|Calculated empty value for|Unable to convert).*'):
             pylint_scs._read_octal_mode_option('test', arg, _default_modes)
 
     @pytest.mark.parametrize('function', ['open', 'mkdir', 'mkfifo', 'mknod'])
