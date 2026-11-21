@@ -36,6 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove the `doc8` pre-commit hook (no reStructuredText files in the repository)
 - Run the `ruff` linter hook before the formatter hook and use the new `ruff-check` hook id
 - Remove deprecated and removed settings from the `ruff` configuration
+- Fix the release version passed to `parse-changelog` in the format workflow for release and hotfix branches
 
 ## [v1.5.1] - 2023-12-15
 
@@ -196,5 +197,5 @@ Initial release
 [v1.4.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.3.1...v1.4.0
 [v1.4.1]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.4.0...v1.4.1
 [v1.5.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.4.1...v1.5.0
-[v1.5.1]: https://github.com/Takishima/pylint-secure-coding-standard/compare/1.5.1...v1.5.1
+[v1.5.1]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.5.0...v1.5.1
 [v1.6.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.5.1...v1.6.0
