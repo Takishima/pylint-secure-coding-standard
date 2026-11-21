@@ -6,7 +6,7 @@ repos:
       - id: check-useless-excludes
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
@@ -20,7 +20,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.5.5
+    rev: v1.5.6
     hooks:
       - id: insert-license
         files: \.py$
@@ -29,40 +29,30 @@ repos:
           - misc/license_header.txt
       - id: remove-tabs
 
-  - repo: https://github.com/PyCQA/doc8/
-    rev: v1.1.1
-    hooks:
-      - id: doc8
-        require_serial: false
-        additional_dependencies: [tomli]
-
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+    rev: v2.4.3
     hooks:
       - id: codespell
-        files: .*\.(py|txt|cmake|md|rst|sh|ps1|hpp|tpp|cpp|cc)$
+        files: \.(py|txt|md)$
         args: [-I, .codespell.allow]
 
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.35.1
+    rev: v1.38.0
     hooks:
       - id: yamllint
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: 1.16.0
+    rev: 1.20.0
     hooks:
       - id: blacken-docs
         args: [-S, -l, '120']
-        additional_dependencies: [black==23.3.0]
+        additional_dependencies: [black==26.10.1]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.7
+    rev: v0.17.5
     hooks:
-      - id: ruff-format
-        name: ruff (format)
-        args: [--preview]
-
-      - id: ruff
+      # NB: lint (with fixes) before formatting, since fixes may need reformatting
+      - id: ruff-check
         name: ruff (fix)
         alias: ruff-fix
         args:
@@ -71,3 +61,7 @@ repos:
           - --output-format=full
           - --show-fixes
           - --preview
+
+      - id: ruff-format
+        name: ruff (format)
+        args: [--preview]
