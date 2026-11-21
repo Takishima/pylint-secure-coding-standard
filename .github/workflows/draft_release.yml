@@ -7,7 +7,7 @@ on:  # yamllint disable-line rule:truthy
     inputs:
       tag:
         description: >-
-          Version to release: "auto" (deduced from the CHANGELOG), "patch", "minor", "major"
+          Version to release: "auto" (deduced from the changelog fragments), "patch", "minor", "major"
           or an explicit version such as v1.2.3
         required: true
         default: auto
@@ -43,22 +43,25 @@ jobs:
               exit 1
           }
 
-          unreleased=$(awk '/^## \[Unreleased\]/{found=1; next} /^## \[/{found=0} found' CHANGELOG.md)
-          if [[ -z "${unreleased//[[:space:]]/}" ]]; then
-              stop "The [Unreleased] section of CHANGELOG.md is empty: nothing to release"
+          # Changelog fragments waiting to be released (README.md does not match the pattern)
+          fragments=$(find changelog.d -maxdepth 1 -type f -name '*.*.md' | sort)
+          if [[ -z "${fragments}" ]]; then
+              stop "No changelog fragment in changelog.d/: nothing to release"
           fi
+          echo "Changelog fragments:"
+          echo "${fragments}"
 
           request="${INPUT_TAG:-auto}"
           request="${request,,}"
           bump=''
           case "${request}" in
               auto)
-                  if grep -qE '^### (Added|Changed|Deprecated|Removed)' <<< "${unreleased}"; then
+                  if grep -qE '\.(added|changed|deprecated|removed)(\.[0-9]+)?\.md$' <<< "${fragments}"; then
                       bump=minor
-                  elif grep -qE '^### (Fixed|Security)' <<< "${unreleased}"; then
+                  elif grep -qE '\.(fixed|security)(\.[0-9]+)?\.md$' <<< "${fragments}"; then
                       bump=patch
                   elif [[ "${EVENT_NAME}" == 'schedule' ]]; then
-                      stop "Only repository maintenance entries in the [Unreleased] section: not worth a release"
+                      stop "Only repository maintenance fragments in changelog.d/: not worth a release"
                   else
                       bump=patch
                   fi
@@ -114,8 +117,9 @@ jobs:
         env:
           RELEASE_TAG: ${{ steps.version.outputs.tag }}
         run: |
-          python3 -m pip install mdformat-gfm 'git+https://github.com/Takishima/keepachangelog@v1.0.1'
-          python3 -m keepachangelog release "${RELEASE_TAG}"
+          python3 -m pip install mdformat-gfm towncrier
+          # Collect the fragments of changelog.d/ into a new section of CHANGELOG.md
+          python3 -m towncrier build --yes --version "${RELEASE_TAG#v}"
           python3 -m mdformat CHANGELOG.md
 
       - name: Push release branch
@@ -126,7 +130,8 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git switch -c "release/${RELEASE_TAG}"
-          git commit -m "Preparing release ${RELEASE_TAG}" CHANGELOG.md
+          git add CHANGELOG.md changelog.d
+          git commit -m "Preparing release ${RELEASE_TAG}"
           git push origin "release/${RELEASE_TAG}"
 
       # yamllint disable rule:line-length
@@ -150,7 +155,7 @@ jobs:
 
           This PR was created ${origin} here: ${RUN_URL}.
 
-          I've moved the unreleased entries of the CHANGELOG to a new \`${RELEASE_TAG}\` section in $(git rev-parse HEAD).
+          I've collected the changelog fragments of \`changelog.d/\` into a new \`${RELEASE_TAG}\` section of the CHANGELOG in $(git rev-parse HEAD).
           The package version itself is derived from the Git tag, so there is nothing else to update.
 
           Merging this PR will build the package, upload it to PyPI and then create the \`${RELEASE_TAG}\` tag and GitHub release.

@@ -5,27 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+Changes that are not released yet are stored as fragments in the [changelog.d](changelog.d/README.md) directory.
 
-### Fixed
-
-- Build Python 3 only wheels (`py3-none-any`) instead of universal `py2.py3` ones
-
-### Repository
-
-- Validate the version given to the release drafting workflow (the leading `v` is optional and normalised, existing
-  tags/branches and an empty `[Unreleased]` section are rejected)
-- Replace the `stefanzweifel/git-auto-commit-action` and `thomaseizinger/create-pull-request` GitHub Actions with plain
-  `git` and `gh` commands in the release drafting workflow
-- Split the release publishing workflow into separate build, PyPI upload and GitHub release jobs with minimal
-  permissions; the GitHub release is now only created once the PyPI upload succeeded
-- Build the release from the merged commit using `SETUPTOOLS_SCM_PRETEND_VERSION` instead of a temporary Git tag
-- Fix the pre-release detection when creating the GitHub release
-- Deduce the next version from the CHANGELOG in the release drafting workflow (`auto`, `patch`, `minor` or `major`
-  instead of an explicit version)
-- Open the release pull request automatically every Monday if user-facing changes are waiting to be released
-- Delete the release branch once the release is published
-- Allow uploading to PyPI using trusted publishing
+<!-- towncrier release notes start -->
 
 ## [v1.6.0] - 2026-11-21
 
@@ -207,7 +189,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release
 
-[unreleased]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.6.0...HEAD
 [v1.0.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/375145a3dec096ff4e33901ef749a1a9a6f4edc6...v1.0.0
 [v1.1.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.0.0...v1.1.0
 [v1.2.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.1.0...v1.2.0
