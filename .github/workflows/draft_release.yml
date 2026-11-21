@@ -6,7 +6,7 @@ on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Version to release (format: vXX.YY.ZZ)'
+        description: 'Version to release (e.g. v1.2.3; the leading "v" is optional)'
         required: true
 
 permissions:
@@ -20,6 +20,37 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Validate release version
+        id: version
+        env:
+          INPUT_TAG: ${{ github.event.inputs.tag }}
+        run: |
+          # Accept 1.2.3, v1.2.3 and V1.2.3 (optionally with a pre-release suffix such as -rc.1)
+          version="${INPUT_TAG#[vV]}"
+          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+              echo "::error::'${INPUT_TAG}' is not a valid version (expected vX.Y.Z or vX.Y.Z-rc.N)"
+              exit 1
+          fi
+          tag="v${version}"
+
+          if git ls-remote --exit-code --tags origin "refs/tags/${tag}" > /dev/null; then
+              echo "::error::Tag ${tag} already exists"
+              exit 1
+          fi
+          if git ls-remote --exit-code --heads origin "refs/heads/release/${tag}" > /dev/null; then
+              echo "::error::Branch release/${tag} already exists"
+              exit 1
+          fi
+
+          # Refuse to create a release without any CHANGELOG entry
+          unreleased=$(awk '/^## \[Unreleased\]/{found=1; next} /^## \[/{found=0} found' CHANGELOG.md)
+          if [[ -z "${unreleased//[[:space:]]/}" ]]; then
+              echo "::error::The [Unreleased] section of CHANGELOG.md is empty: nothing to release"
+              exit 1
+          fi
+
+          echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+
       - name: Setup Python
         uses: actions/setup-python@v7
         with:
@@ -29,34 +60,43 @@ jobs:
 
       - name: Update CHANGELOG
         env:
-          RELEASE_TAG: ${{ github.event.inputs.tag }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
         run: |
           python3 -m pip install mdformat-gfm 'git+https://github.com/Takishima/keepachangelog@v1.0.1'
           python3 -m keepachangelog release "${RELEASE_TAG}"
           python3 -m mdformat CHANGELOG.md
 
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v7
-        id: make-commit
-        with:
-          branch: release/${{ github.event.inputs.tag }}
-          create_branch: true
-          file_pattern: 'CHANGELOG.md'
-          commit_message: Preparing release ${{ github.event.inputs.tag }}
-          commit_author: github-actions[bot] <noreply@github.com>
+      - name: Push release branch
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git switch -c "release/${RELEASE_TAG}"
+          git commit -m "Preparing release ${RELEASE_TAG}" CHANGELOG.md
+          git push origin "release/${RELEASE_TAG}"
 
       # yamllint disable rule:line-length
       - name: Create pull request
-        uses: thomaseizinger/create-pull-request@1.4.0
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          head: release/${{ github.event.inputs.tag }}
-          base: main
-          title: Release version ${{ github.event.inputs.tag }}
-          reviewers: ${{ github.actor }}
-          body: |
-            Hi @${{ github.actor }}!
-            This PR was created in response to a manual trigger of the release workflow here: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}.
-            I've updated the changelog and bumped the versions in the manifest files in this commit: ${{ steps.make-commit.outputs.commit_hash }}.
-            Merging this PR will create a GitHub release and upload any assets that are created as part of the release build.
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          cat > "${RUNNER_TEMP}/pr_body.md" << EOF
+          Hi @${GITHUB_ACTOR}!
+
+          This PR was created in response to a manual trigger of the release workflow here: ${RUN_URL}.
+
+          I've moved the unreleased entries of the CHANGELOG to a new \`${RELEASE_TAG}\` section in $(git rev-parse HEAD).
+          The package version itself is derived from the Git tag, so there is nothing else to update.
+
+          Merging this PR will build the package, upload it to PyPI and then create the \`${RELEASE_TAG}\` tag and GitHub release.
+          EOF
+
+          gh pr create \
+            --base main \
+            --head "release/${RELEASE_TAG}" \
+            --title "Release version ${RELEASE_TAG}" \
+            --body-file "${RUNNER_TEMP}/pr_body.md" \
+            --reviewer "${GITHUB_ACTOR}"

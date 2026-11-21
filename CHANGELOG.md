@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Build Python 3 only wheels (`py3-none-any`) instead of universal `py2.py3` ones
+
+### Repository
+
+- Validate the version given to the release drafting workflow (the leading `v` is optional and normalised, existing
+  tags/branches and an empty `[Unreleased]` section are rejected)
+- Replace the `stefanzweifel/git-auto-commit-action` and `thomaseizinger/create-pull-request` GitHub Actions with plain
+  `git` and `gh` commands in the release drafting workflow
+- Split the release publishing workflow into separate build, PyPI upload and GitHub release jobs with minimal
+  permissions; the GitHub release is now only created once the PyPI upload succeeded
+- Build the release from the merged commit using `SETUPTOOLS_SCM_PRETEND_VERSION` instead of a temporary Git tag
+- Fix the pre-release detection when creating the GitHub release
+- Allow uploading to PyPI using trusted publishing
+
 ## [v1.6.0] - 2026-11-21
 
 ### Changed
