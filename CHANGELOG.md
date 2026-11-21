@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.6.0] - 2026-11-21
+
 ### Changed
 
 - Drop support for Python 3.8 and 3.9 (end-of-life); Python 3.10 is now the minimum version
@@ -184,7 +186,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 Initial release
 
-[unreleased]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.5.1...HEAD
+[unreleased]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.6.0...HEAD
 [v1.0.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/375145a3dec096ff4e33901ef749a1a9a6f4edc6...v1.0.0
 [v1.1.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.0.0...v1.1.0
 [v1.2.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.1.0...v1.2.0
@@ -195,3 +197,4 @@ Initial release
 [v1.4.1]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.4.0...v1.4.1
 [v1.5.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.4.1...v1.5.0
 [v1.5.1]: https://github.com/Takishima/pylint-secure-coding-standard/compare/1.5.1...v1.5.1
+[v1.6.0]: https://github.com/Takishima/pylint-secure-coding-standard/compare/v1.5.1...v1.6.0
