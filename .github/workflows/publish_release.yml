@@ -36,20 +36,13 @@ jobs:
       - name: Extract version from tag or branch name
         id: version
         env:
-          EVENT_NAME: ${{ github.event_name }}
-          TAG_NAME: ${{ github.ref_name }}
-          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+          # Either "vX.Y.Z" (tag) or "release/vX.Y.Z" or "hotfix/vX.Y.Z" (merged pull request)
+          REF_NAME: ${{ github.event.pull_request.head.ref || github.ref_name }}
         run: |
-          if [[ "${EVENT_NAME}" == 'push' ]]; then
-              VERSION="${TAG_NAME}"
-          else
-              VERSION="${BRANCH_NAME#release/}"
-              VERSION="${VERSION#hotfix/}"
-          fi
+          VERSION="${REF_NAME##*/}"
           VERSION="${VERSION#v}"
-
           if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
-              echo "::error::Unable to extract a valid version (got '${VERSION}')"
+              echo "::error::Unable to extract a valid version from '${REF_NAME}'"
               exit 1
           fi
           echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
@@ -72,17 +65,15 @@ jobs:
           python -m pip install twine --prefer-binary
           python -m twine check --strict dist/*
 
+      - uses: taiki-e/install-action@v2
+        with:
+          tool: parse-changelog
+
       - name: Extract release notes from CHANGELOG
         env:
-          target: x86_64-unknown-linux-musl
-          source_url: https://github.com/taiki-e/parse-changelog/releases/download
-          parse_changelog_tag: v0.5.1
           RELEASE_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          # https://github.com/taiki-e/parse-changelog
-          curl -LsSf "${source_url}/${parse_changelog_tag}/parse-changelog-${target}.tar.gz" | tar xzf -
-          ./parse-changelog CHANGELOG.md "${RELEASE_VERSION}" > release_notes.md
-          rm -f ./parse-changelog
+          parse-changelog CHANGELOG.md "${RELEASE_VERSION}" > release_notes.md
           cat release_notes.md
 
       - uses: actions/upload-artifact@v7
@@ -126,21 +117,16 @@ jobs:
           name: release
 
       - name: Create release
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          RELEASE_VERSION: ${{ needs.build.outputs.version }}
-          # Commit to tag when the tag does not exist yet (ignored otherwise)
-          TARGET_SHA: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
-        run: |
-          if [[ "${RELEASE_VERSION}" == *-* ]]; then
-              prerelease="--prerelease"
-          fi
-          gh release create "v${RELEASE_VERSION}" ${prerelease:-} \
-            --repo "${GITHUB_REPOSITORY}" \
-            --target "${TARGET_SHA}" \
-            --title "pylint-secure-coding-standard v${RELEASE_VERSION}" \
-            --notes-file release_notes.md \
-            dist/*
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: v${{ needs.build.outputs.version }}
+          # Commit to tag when the tag does not exist yet
+          target_commitish: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
+          name: pylint-secure-coding-standard v${{ needs.build.outputs.version }}
+          body_path: release_notes.md
+          prerelease: ${{ contains(needs.build.outputs.version, '-') }}
+          files: dist/*
+          fail_on_unmatched_files: true
 
       - name: Delete release branch
         if: github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork
