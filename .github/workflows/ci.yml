@@ -2,14 +2,21 @@
 
 name: CI
 
-on:
+on:  # yamllint disable-line rule:truthy
   pull_request:
-    types: [assigned, opened, synchronize, reopened]
   push:
     branches:
       - main
       - develop
       - v*
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
 
 jobs:
   standard:
@@ -18,44 +25,28 @@ jobs:
       matrix:
         runs-on: [ubuntu-latest, windows-latest, macos-latest]
         python:
-          - 3.8
-          - 3.9
           - '3.10'
           - '3.11'
-        exclude:
-          # macos-latest is now running on M1 macs
-          - runs-on: macos-latest
-            python: 3.8
-          - runs-on: macos-latest
-            python: 3.9
-          - runs-on: macos-latest
-            python: 3.10
+          - '3.12'
+          - '3.13'
+          - '3.14'
+          - '3.15'
 
-    name: "🐍 ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
+    name: "🐍 ${{ matrix.python }} • ${{ matrix.runs-on }}"
     runs-on: ${{ matrix.runs-on }}
-    if: >-
-      (github.event_name != 'pull_request'
-        || (github.event_name == 'pull_request' && github.event.pull_request.merged != true))
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Get history and tags for SCM versioning to work
-        run: |
-          git fetch --prune --unshallow
-          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      - uses: actions/checkout@v7
+        with:
+          # Full history and tags are required for SCM versioning to work
+          fetch-depth: 0
 
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
-          architecture: 'x64'
           cache: 'pip'
           cache-dependency-path: '**/setup.cfg'
-
-      - name: Prepare env
-        run: |
-          python -m pip install -U wheel coveralls
 
       - name: Setup annotations on Linux
         if: runner.os == 'Linux'
@@ -65,23 +56,21 @@ jobs:
         run: python -m pip install -e .[test]
 
       - name: Run tests
-        run: python -m pytest -v --cov=pylint_secure_coding_standard
+        run: python -m pytest -v --cov=pylint_secure_coding_standard --cov-report=term --cov-report=lcov:coverage.lcov
 
       - name: Coveralls.io
-        run: coveralls --service=github
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          COVERALLS_FLAG_NAME: python-${{ matrix.python }}-${{ matrix.runs-on }}-x64
-          COVERALLS_PARALLEL: true
+        uses: coverallsapp/github-action@v2
+        with:
+          file: coverage.lcov
+          format: lcov
+          flag-name: python-${{ matrix.python }}-${{ matrix.runs-on }}
+          parallel: true
 
   finish:
     needs: standard
     runs-on: ubuntu-latest
-    container: python:3-slim
     steps:
       - name: Coveralls Finished
-        run: |
-          pip3 install --upgrade coveralls
-          coveralls --finish
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: coverallsapp/github-action@v2
+        with:
+          parallel-finished: true

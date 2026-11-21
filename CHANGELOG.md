@@ -7,18 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Drop support for Python 3.8 and 3.9 (end-of-life); Python 3.10 is now the minimum version
+- Add official support for Python 3.12, 3.13, 3.14 and 3.15
+
 ### Repository
 
-- Update `action/setup-python` GitHub Action to v5
-- Update `action/checkout` GitHub Action to v4
-- Update `github/codeql-action/analyze` GitHub Action to v3
+- Update `action/setup-python` GitHub Action to v7
+- Update `action/checkout` GitHub Action to v7
+- Update `github/codeql-action` GitHub Actions to v4
 - Update `thomaseizinger/create-pull-request` GitHub Action to v1.4.0
+- Update `stefanzweifel/git-auto-commit-action` GitHub Action to v7
+- Update `EndBug/add-and-commit` GitHub Action to v11
+- Run CI for Python 3.10 to 3.15 on Linux, Windows and macOS
+- Upload coverage data using the `coverallsapp/github-action` GitHub Action
+- Group all GitHub Actions updates from Dependabot into a single pull request
+- Avoid shell injection from pull request data in GitHub workflows
+- Restrict the default `GITHUB_TOKEN` permissions in all GitHub workflows
 - Update `adrienverge/yamllint.git` hook to v1.35.1
 - Update `astral-sh/ruff-pre-commit` hook to v0.4.7
 - Update `codespell-project/codespell` hook to v2.3.0
 - Update `Lucas-C/pre-commit-hooks` hook to v1.5.5
 - Update `pre-commit/pre-commit-hooks` hook to v4.6.0
-- Disable macOS CI for Python < 3.11 (now runs on M1 macs on GitHub)
 
 ## [v1.5.1] - 2023-12-15
 

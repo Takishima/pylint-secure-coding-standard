@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 
 [tool.ruff]
 line-length = 120
-target-version = 'py38'
+target-version = 'py310'
 
 [tool.ruff.lint]
 
@@ -63,6 +63,7 @@ select = ['F',     # pyflakes
 ]
 
 ignore = ['ANN101', # missing-type-self
+          'UP038',  # non-pep604-isinstance (deprecated rule, slower at runtime)
           'D203',   # one-blank-line-before-class
           'D212',   # multi-line-summary-first-line
           'S603',    # subprocess-without-shell-equals-true
@@ -120,7 +121,7 @@ convention = 'google'
 
 [tool.black]
     line-length = 120
-    target-version = ['py38','py39','py310']
+    target-version = ['py310','py311','py312','py313']
     skip-string-normalization = true
 
 

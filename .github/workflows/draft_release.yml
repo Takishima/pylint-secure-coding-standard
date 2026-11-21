@@ -9,28 +9,34 @@ on:  # yamllint disable-line rule:truthy
         description: 'Version to release (format: vXX.YY.ZZ)'
         required: true
 
+permissions:
+  contents: write  # required to push the release branch
+  pull-requests: write  # required to open the release pull request
+
 jobs:
   new-release:
     name: "Draft a new release"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
           cache: 'pip'
           cache-dependency-path: '**/setup.cfg'
 
       - name: Update CHANGELOG
+        env:
+          RELEASE_TAG: ${{ github.event.inputs.tag }}
         run: |
           python3 -m pip install mdformat-gfm 'git+https://github.com/Takishima/keepachangelog@v1.0.1'
-          python3 -m keepachangelog release "${{ github.event.inputs.tag }}"
+          python3 -m keepachangelog release "${RELEASE_TAG}"
           python3 -m mdformat CHANGELOG.md
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         id: make-commit
         with:
           branch: release/${{ github.event.inputs.tag }}

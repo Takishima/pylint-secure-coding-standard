@@ -12,6 +12,9 @@ on:  # yamllint disable-line rule:truthy
     types:
       - closed
 
+permissions:
+  contents: write  # required to create the GitHub release
+
 jobs:
   release:
     name: Build wheels and release on Pypi
@@ -23,7 +26,7 @@ jobs:
               || startsWith(github.event.pull_request.head.ref, 'hotfix/')))
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -39,16 +42,18 @@ jobs:
 
       - name: Extract version from branch name (for release branches)
         if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'release/')
+        env:
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
         run: |
-          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
           VERSION=${BRANCH_NAME#release/}
           VERSION=${VERSION#v}
           echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Extract version from branch name (for hotfix branches)
         if: github.event_name == 'pull_request'  && startsWith(github.event.pull_request.head.ref, 'hotfix/')
+        env:
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
         run: |
-          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
           VERSION=${BRANCH_NAME#hotfix/}
           VERSION=${VERSION#v}
           echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
@@ -104,7 +109,7 @@ jobs:
             dist/*
 
       - name: Setup Python for Pypi upload
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
 
       - name: Publish standard package
         uses: pypa/gh-action-pypi-publish@release/v1
