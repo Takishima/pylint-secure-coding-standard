@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   permissions; the GitHub release is now only created once the PyPI upload succeeded
 - Build the release from the merged commit using `SETUPTOOLS_SCM_PRETEND_VERSION` instead of a temporary Git tag
 - Fix the pre-release detection when creating the GitHub release
+- Deduce the next version from the CHANGELOG in the release drafting workflow (`auto`, `patch`, `minor` or `major`
+  instead of an explicit version)
+- Open the release pull request automatically every Monday if user-facing changes are waiting to be released
+- Delete the release branch once the release is published
 - Allow uploading to PyPI using trusted publishing
 
 ## [v1.6.0] - 2026-11-21

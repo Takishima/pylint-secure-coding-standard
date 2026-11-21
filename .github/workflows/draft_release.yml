@@ -6,8 +6,14 @@ on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Version to release (e.g. v1.2.3; the leading "v" is optional)'
+        description: >-
+          Version to release: "auto" (deduced from the CHANGELOG), "patch", "minor", "major"
+          or an explicit version such as v1.2.3
         required: true
+        default: auto
+  schedule:
+    # Every Monday: open a release pull request if user-facing changes are waiting to be released
+    - cron: '23 5 * * 1'
 
 permissions:
   contents: write  # required to push the release branch
@@ -20,38 +26,83 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      - name: Validate release version
+      - name: Determine release version
         id: version
         env:
           INPUT_TAG: ${{ github.event.inputs.tag }}
+          EVENT_NAME: ${{ github.event_name }}
         run: |
-          # Accept 1.2.3, v1.2.3 and V1.2.3 (optionally with a pre-release suffix such as -rc.1)
-          version="${INPUT_TAG#[vV]}"
-          if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
-              echo "::error::'${INPUT_TAG}' is not a valid version (expected vX.Y.Z or vX.Y.Z-rc.N)"
+          # Scheduled runs silently stop when there is nothing to do; manual runs fail instead
+          stop() {
+              if [[ "${EVENT_NAME}" == 'schedule' ]]; then
+                  echo "::notice::$1"
+                  echo "skip=true" >> "${GITHUB_OUTPUT}"
+                  exit 0
+              fi
+              echo "::error::$1"
               exit 1
+          }
+
+          unreleased=$(awk '/^## \[Unreleased\]/{found=1; next} /^## \[/{found=0} found' CHANGELOG.md)
+          if [[ -z "${unreleased//[[:space:]]/}" ]]; then
+              stop "The [Unreleased] section of CHANGELOG.md is empty: nothing to release"
+          fi
+
+          request="${INPUT_TAG:-auto}"
+          request="${request,,}"
+          bump=''
+          case "${request}" in
+              auto)
+                  if grep -qE '^### (Added|Changed|Deprecated|Removed)' <<< "${unreleased}"; then
+                      bump=minor
+                  elif grep -qE '^### (Fixed|Security)' <<< "${unreleased}"; then
+                      bump=patch
+                  elif [[ "${EVENT_NAME}" == 'schedule' ]]; then
+                      stop "Only repository maintenance entries in the [Unreleased] section: not worth a release"
+                  else
+                      bump=patch
+                  fi
+                  ;;
+              patch | minor | major)
+                  bump="${request}"
+                  ;;
+              *)
+                  # Explicit version: 1.2.3 or v1.2.3 (optionally with a pre-release suffix such as -rc.1)
+                  version="${request#v}"
+                  if [[ ! "${version}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9a-z.]+)?$ ]]; then
+                      stop "'${INPUT_TAG}' is not valid (expected auto, patch, minor, major, vX.Y.Z or vX.Y.Z-rc.N)"
+                  fi
+                  ;;
+          esac
+
+          if [[ -n "${bump}" ]]; then
+              # Latest stable release listed in the CHANGELOG
+              latest=$(grep -m1 -oP '^## \[v?\K[0-9]+\.[0-9]+\.[0-9]+(?=\])' CHANGELOG.md || true)
+              if [[ -z "${latest}" ]]; then
+                  stop "Unable to find the latest release in CHANGELOG.md: please give an explicit version"
+              fi
+              IFS=. read -r major minor patch <<< "${latest}"
+              case "${bump}" in
+                  major) version="$((major + 1)).0.0" ;;
+                  minor) version="${major}.$((minor + 1)).0" ;;
+                  patch) version="${major}.${minor}.$((patch + 1))" ;;
+              esac
+              echo "Latest release is v${latest}: ${bump} bump to v${version}"
           fi
           tag="v${version}"
 
           if git ls-remote --exit-code --tags origin "refs/tags/${tag}" > /dev/null; then
-              echo "::error::Tag ${tag} already exists"
-              exit 1
+              stop "Tag ${tag} already exists"
           fi
           if git ls-remote --exit-code --heads origin "refs/heads/release/${tag}" > /dev/null; then
-              echo "::error::Branch release/${tag} already exists"
-              exit 1
-          fi
-
-          # Refuse to create a release without any CHANGELOG entry
-          unreleased=$(awk '/^## \[Unreleased\]/{found=1; next} /^## \[/{found=0} found' CHANGELOG.md)
-          if [[ -z "${unreleased//[[:space:]]/}" ]]; then
-              echo "::error::The [Unreleased] section of CHANGELOG.md is empty: nothing to release"
-              exit 1
+              stop "Branch release/${tag} already exists (delete it to draft that release again)"
           fi
 
           echo "tag=${tag}" >> "${GITHUB_OUTPUT}"
+          echo "Drafting release \`${tag}\`" >> "${GITHUB_STEP_SUMMARY}"
 
       - name: Setup Python
+        if: steps.version.outputs.skip != 'true'
         uses: actions/setup-python@v7
         with:
           python-version: '3.11'
@@ -59,6 +110,7 @@ jobs:
           cache-dependency-path: '**/setup.cfg'
 
       - name: Update CHANGELOG
+        if: steps.version.outputs.skip != 'true'
         env:
           RELEASE_TAG: ${{ steps.version.outputs.tag }}
         run: |
@@ -67,6 +119,7 @@ jobs:
           python3 -m mdformat CHANGELOG.md
 
       - name: Push release branch
+        if: steps.version.outputs.skip != 'true'
         env:
           RELEASE_TAG: ${{ steps.version.outputs.tag }}
         run: |
@@ -78,25 +131,36 @@ jobs:
 
       # yamllint disable rule:line-length
       - name: Create pull request
+        if: steps.version.outputs.skip != 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: ${{ steps.version.outputs.tag }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          cat > "${RUNNER_TEMP}/pr_body.md" << EOF
-          Hi @${GITHUB_ACTOR}!
+          if [[ "${GITHUB_EVENT_NAME}" == 'schedule' ]]; then
+              reviewer="${GITHUB_REPOSITORY_OWNER}"
+              origin="by the scheduled run of the release workflow"
+          else
+              reviewer="${GITHUB_ACTOR}"
+              origin="in response to a manual trigger of the release workflow"
+          fi
 
-          This PR was created in response to a manual trigger of the release workflow here: ${RUN_URL}.
+          cat > "${RUNNER_TEMP}/pr_body.md" << EOF
+          Hi @${reviewer}!
+
+          This PR was created ${origin} here: ${RUN_URL}.
 
           I've moved the unreleased entries of the CHANGELOG to a new \`${RELEASE_TAG}\` section in $(git rev-parse HEAD).
           The package version itself is derived from the Git tag, so there is nothing else to update.
 
           Merging this PR will build the package, upload it to PyPI and then create the \`${RELEASE_TAG}\` tag and GitHub release.
+          Not the right time or the right version number? Close this PR and delete its branch.
           EOF
 
           gh pr create \
             --base main \
             --head "release/${RELEASE_TAG}" \
             --title "Release version ${RELEASE_TAG}" \
-            --body-file "${RUNNER_TEMP}/pr_body.md" \
-            --reviewer "${GITHUB_ACTOR}"
+            --body-file "${RUNNER_TEMP}/pr_body.md"
+          gh pr edit "release/${RELEASE_TAG}" --add-reviewer "${reviewer}" \
+            || echo "::warning::Unable to request a review from ${reviewer}"
