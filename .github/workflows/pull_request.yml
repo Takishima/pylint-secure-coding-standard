@@ -13,14 +13,14 @@ jobs:
       (github.event.pull_request.title == '[pre-commit.ci] pre-commit autoupdate') &&
       (github.event.action == 'opened')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
           token: ${{ secrets.PRE_COMMIT_CI_CHANGELOG }}
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
           cache: 'pip'
@@ -36,7 +36,7 @@ jobs:
 
       - name: Commit changes
         id: commit
-        uses: EndBug/add-and-commit@v10
+        uses: EndBug/add-and-commit@v11
         with:
           author_name: github-actions[bot]
           author_email: noreply@github.com
@@ -48,7 +48,7 @@ jobs:
     name: CHANGELOG enforcer
     if: '!cancelled()'
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
