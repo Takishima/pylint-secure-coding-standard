@@ -191,11 +191,7 @@ def _is_shell_true_call(node):
         if node.func.attrname in {'call', 'check_call', 'check_output', 'Popen', 'run'}:
             if node.keywords:
                 for keyword in node.keywords:
-                    if (
-                        keyword.arg == 'shell'
-                        and isinstance(keyword.value, nodes.Const)
-                        and bool(keyword.value.value)
-                    ):
+                    if keyword.arg == 'shell' and isinstance(keyword.value, nodes.Const) and bool(keyword.value.value):
                         return True
 
             if (
