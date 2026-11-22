@@ -9,6 +9,29 @@ Changes that are not released yet are stored as fragments in the [changelog.d](c
 
 <!-- towncrier release notes start -->
 
+## [v1.6.1](https://github.com/Takishima/pylint-secure-coding-standard/releases/tag/v1.6.1) - 2026-11-22
+
+### Fixed
+
+- Build Python 3 only wheels (`py3-none-any`) instead of universal `py2.py3` ones
+- Import node classes from `astroid.nodes` to avoid deprecation warnings with pylint 4 (astroid 4) while keeping compatibility with pylint 3
+
+### Repository
+
+- Add `AGENTS.md` and `CLAUDE.md` with instructions for AI coding tools
+- Allow uploading to PyPI using trusted publishing
+- Build the release from the merged commit using `SETUPTOOLS_SCM_PRETEND_VERSION` instead of a temporary Git tag
+- Check that pull requests add a changelog fragment and do not edit `CHANGELOG.md` directly (replaces the `dangoslen/changelog-enforcer` GitHub Action)
+- Deduce the next version from the changelog fragments when drafting a release (`auto`, `patch`, `minor`, `major` or an explicit, validated version), using a tested script in `.github/scripts/`
+- Delete the release branch once the release is published
+- Do not require a changelog fragment for Dependabot pull requests (label `dependencies`)
+- Fix the pre-release detection when creating the GitHub release
+- Generate the changelog fragments of pre-commit.ci pull requests with a script from this repository, also when pre-commit.ci updates its pull request
+- Manage the CHANGELOG with [towncrier](https://towncrier.readthedocs.io): each pull request adds a fragment to `changelog.d/` and the fragments are collected into `CHANGELOG.md` when a release is drafted
+- Open the release pull request automatically every Monday if user-facing changes are waiting to be released
+- Split the release publishing workflow into separate build, PyPI upload and GitHub release jobs with minimal permissions; the GitHub release is only created once the PyPI upload succeeded
+- Use the `peter-evans/create-pull-request`, `softprops/action-gh-release` and `taiki-e/install-action` GitHub Actions in the release workflows (replacing `stefanzweifel/git-auto-commit-action`, `thomaseizinger/create-pull-request` and hand-written shell code)
+
 ## [v1.6.0] - 2026-11-21
 
 ### Changed
