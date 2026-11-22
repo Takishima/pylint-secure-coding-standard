@@ -21,7 +21,7 @@ import platform
 import stat
 from typing import ClassVar
 
-import astroid
+from astroid import nodes
 from pylint.checkers import BaseChecker
 
 # ==============================================================================
@@ -108,8 +108,8 @@ def _is_function_call(node, module, function):
     if not isinstance(function, (list, tuple)):
         function = (function,)
     return (
-        isinstance(node.func, astroid.Attribute)
-        and isinstance(node.func.expr, astroid.Name)
+        isinstance(node.func, nodes.Attribute)
+        and isinstance(node.func.expr, nodes.Name)
         and node.func.expr.name == module
         and node.func.attrname in function
     )
@@ -120,13 +120,13 @@ def _is_function_call(node, module, function):
 
 def _is_os_path_call(node):
     return (
-        isinstance(node.func, astroid.Attribute)
+        isinstance(node.func, nodes.Attribute)
         and (
-            (isinstance(node.func.expr, astroid.Name) and node.func.expr.name == 'op')
+            (isinstance(node.func.expr, nodes.Name) and node.func.expr.name == 'op')
             or (
-                isinstance(node.func.expr, astroid.Attribute)
+                isinstance(node.func.expr, nodes.Attribute)
                 and node.func.expr.attrname == 'path'
-                and isinstance(node.func.expr.expr, astroid.Name)
+                and isinstance(node.func.expr.expr, nodes.Name)
                 and node.func.expr.expr.name == 'os'
             )
         )
@@ -135,17 +135,17 @@ def _is_os_path_call(node):
 
 
 def _is_builtin_open_for_writing(node):
-    if isinstance(node.func, astroid.Name) and node.func.name == 'open':
+    if isinstance(node.func, nodes.Name) and node.func.name == 'open':
         mode = ''
         if len(node.args) > 1:
-            if isinstance(node.args[1], astroid.Name):
+            if isinstance(node.args[1], nodes.Name):
                 return True  # variable -> to be on the safe side, flag as inappropriate
-            if isinstance(node.args[1], astroid.Const):
+            if isinstance(node.args[1], nodes.Const):
                 mode = node.args[1].value
         elif node.keywords:
             for keyword in node.keywords:
                 if keyword.arg == 'mode':
-                    if not isinstance(keyword.value, astroid.Const):
+                    if not isinstance(keyword.value, nodes.Const):
                         return True  # variable -> to be on the safe side, flag as inappropriate
                     mode = keyword.value.value
                     break
@@ -162,11 +162,11 @@ def _is_builtin_open_for_writing(node):
 
 def _get_mode_arg(node, args_idx):
     mode = None
-    if len(node.args) > args_idx and isinstance(node.args[args_idx], astroid.Const):
+    if len(node.args) > args_idx and isinstance(node.args[args_idx], nodes.Const):
         mode = node.args[args_idx].value
     elif node.keywords:
         for keyword in node.keywords:
-            if keyword.arg == 'mode' and isinstance(keyword.value, astroid.Const):
+            if keyword.arg == 'mode' and isinstance(keyword.value, nodes.Const):
                 mode = keyword.value.value
                 break
     return mode
@@ -183,7 +183,7 @@ def _is_allowed_mode(node, allowed_modes, args_idx):
 
 def _is_shell_true_call(node):
     n_args_max = 8
-    if not (isinstance(node.func, astroid.Attribute) and isinstance(node.func.expr, astroid.Name)):
+    if not (isinstance(node.func, nodes.Attribute) and isinstance(node.func.expr, nodes.Name)):
         return False
 
     # subprocess module
@@ -191,16 +191,12 @@ def _is_shell_true_call(node):
         if node.func.attrname in {'call', 'check_call', 'check_output', 'Popen', 'run'}:
             if node.keywords:
                 for keyword in node.keywords:
-                    if (
-                        keyword.arg == 'shell'
-                        and isinstance(keyword.value, astroid.Const)
-                        and bool(keyword.value.value)
-                    ):
+                    if keyword.arg == 'shell' and isinstance(keyword.value, nodes.Const) and bool(keyword.value.value):
                         return True
 
             if (
                 len(node.args) > n_args_max
-                and isinstance(node.args[n_args_max], astroid.Const)
+                and isinstance(node.args[n_args_max], nodes.Const)
                 and bool(node.args[n_args_max].value)
             ):
                 return True
@@ -216,25 +212,25 @@ def _is_shell_true_call(node):
 
 def _is_pdb_call(node):
     if (
-        isinstance(node.func, astroid.Attribute)
-        and isinstance(node.func.expr, astroid.Name)
+        isinstance(node.func, nodes.Attribute)
+        and isinstance(node.func.expr, nodes.Name)
         and node.func.expr.name == 'pdb'
     ):
         # Cover:
         return True
 
     # Cover:
-    return isinstance(node.func, astroid.Name) and node.func.name == 'Pdb'
+    return isinstance(node.func, nodes.Name) and node.func.name == 'Pdb'
 
 
 def _is_mktemp_call(node):
-    if isinstance(node.func, astroid.Attribute) and node.func.attrname == 'mktemp':
+    if isinstance(node.func, nodes.Attribute) and node.func.attrname == 'mktemp':
         # Cover:
         #  * pdb.func().
         return True
     # Cover:
     # * Pdb().
-    return isinstance(node.func, astroid.Name) and node.func.name == 'mktemp'
+    return isinstance(node.func, nodes.Name) and node.func.name == 'mktemp'
 
 
 def _is_yaml_unsafe_call(node):
@@ -243,8 +239,8 @@ def _is_yaml_unsafe_call(node):
     unsafe_loaders = ('Loader', 'UnsafeLoader', 'FullLoader')
 
     if (
-        isinstance(node.func, astroid.Attribute)
-        and isinstance(node.func.expr, astroid.Name)
+        isinstance(node.func, nodes.Attribute)
+        and isinstance(node.func.expr, nodes.Name)
         and node.func.expr.name == 'yaml'
     ):
         if node.func.attrname in {'unsafe_load', 'full_load'}:
@@ -254,7 +250,7 @@ def _is_yaml_unsafe_call(node):
             return True
         if node.func.attrname == 'load' and node.keywords:
             for keyword in node.keywords:
-                if keyword.arg == 'Loader' and isinstance(keyword.value, astroid.Name):
+                if keyword.arg == 'Loader' and isinstance(keyword.value, nodes.Name):
                     if keyword.value.name in unsafe_loaders:
                         # Cover:
                         #  * yaml.load(x, Loader=Loader).
@@ -268,7 +264,7 @@ def _is_yaml_unsafe_call(node):
                         return False
         elif node.func.attrname == 'load' and (
             len(node.args) < load_n_args_max
-            or (isinstance(node.args[1], astroid.Name) and node.args[1].name in unsafe_loaders)
+            or (isinstance(node.args[1], nodes.Name) and node.args[1].name in unsafe_loaders)
         ):
             # Cover:
             #  * yaml.load(x).
@@ -280,7 +276,7 @@ def _is_yaml_unsafe_call(node):
     # Cover:
     #  * unsafe_load(...).
     #  * full_load(...).
-    return isinstance(node.func, astroid.Name) and node.func.name in {'unsafe_load', 'full_load'}
+    return isinstance(node.func, nodes.Name) and node.func.name in {'unsafe_load', 'full_load'}
 
 
 # ==============================================================================
@@ -325,23 +321,23 @@ def _chmod_get_mode(node):
     Extract the mode constant of a node.
 
     Args:
-        node (astroid.node_classes.NodeNG): an AST node
+        node (astroid.nodes.NodeNG): an AST node
 
     Raises:
         ValueError: if a node is encountered that cannot be processed
     """
-    if isinstance(node, astroid.Name) and node.name in _chmod_known_mode_values:
+    if isinstance(node, nodes.Name) and node.name in _chmod_known_mode_values:
         return getattr(stat, node.name)
     if (
-        isinstance(node, astroid.Attribute)
-        and isinstance(node.expr, astroid.Name)
+        isinstance(node, nodes.Attribute)
+        and isinstance(node.expr, nodes.Name)
         and node.attrname in _chmod_known_mode_values
         and node.expr.name == 'stat'
     ):
         return getattr(stat, node.attrname)
-    if isinstance(node, astroid.UnaryOp):
+    if isinstance(node, nodes.UnaryOp):
         return _unop[node.op](_chmod_get_mode(node.operand))
-    if isinstance(node, astroid.BinOp):
+    if isinstance(node, nodes.BinOp):
         return _binop[node.op](_chmod_get_mode(node.left), _chmod_get_mode(node.right))
 
     msg = f'Do not know how to process node: {node.repr_tree()}'
@@ -541,7 +537,7 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
         self._os_mknod_modes_allowed = []
 
     def visit_call(self, node):  # pylint: disable=too-many-branches # ruff: ignore[too-many-branches, complex-structure]
-        """Visitor method called for astroid.Call nodes."""
+        """Visitor method called for nodes.Call nodes."""
         if _is_pdb_call(node):
             self.add_message('avoid-debug-stmt', node=node)
         elif _is_mktemp_call(node):
@@ -560,7 +556,7 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
             self.add_message('avoid-os-popen', node=node)
         elif _is_builtin_open_for_writing(node) and self._os_open_modes_allowed:
             self.add_message('replace-builtin-open', node=node)
-        elif isinstance(node.func, astroid.Name) and (node.func.name in {'eval', 'exec'}):
+        elif isinstance(node.func, nodes.Name) and (node.func.name in {'eval', 'exec'}):
             self.add_message('avoid-eval-exec', node=node)
         elif not _is_posix() and _is_function_call(node, module='shlex', function='quote'):
             self.add_message('avoid-shlex-quote-on-non-posix', node=node)
@@ -636,7 +632,7 @@ class SecureCodingStandardChecker(BaseChecker):  # pylint: disable=too-many-inst
     def visit_with(self, node):
         """Visitor method called for astroid.With nodes."""
         for item in node.items:
-            if item and isinstance(item[0], astroid.Call):
+            if item and isinstance(item[0], nodes.Call):
                 if self._os_open_modes_allowed:
                     if _is_builtin_open_for_writing(item[0]):
                         self.add_message('replace-builtin-open', node=node)

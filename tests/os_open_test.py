@@ -104,7 +104,7 @@ class TestSecureCodingStandardChecker(pylint.testutils.CheckerTestCase):
 
         # Find index of first line starting with 'with'
         for node in nodes:
-            if isinstance(node, astroid.With):
+            if isinstance(node, astroid.nodes.With):
                 with_nodes.append(node)
             else:
                 call_nodes.append(node)
