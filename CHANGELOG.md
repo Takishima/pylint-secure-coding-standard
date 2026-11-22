@@ -9,6 +9,13 @@ Changes that are not released yet are stored as fragments in the [changelog.d](c
 
 <!-- towncrier release notes start -->
 
+## [v1.6.2](https://github.com/Takishima/pylint-secure-coding-standard/releases/tag/v1.6.2) - 2026-11-22
+
+### Repository
+
+- Add a `breaking` changelog fragment type, which makes the release workflow propose a major version
+- Publish releases to PyPI with trusted publishing so that the uploaded files carry provenance attestations
+
 ## [v1.6.1](https://github.com/Takishima/pylint-secure-coding-standard/releases/tag/v1.6.1) - 2026-11-22
 
 ### Fixed
